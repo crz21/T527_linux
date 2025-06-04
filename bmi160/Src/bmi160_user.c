@@ -279,6 +279,7 @@ void get_bmi160_Gres()
 int main(void *arg)
 {
     int8_t rslt;
+    static uint16_t cnt;
 
     fd = open(DEV_OPERATION, O_RDWR);
     if (fd < 0) {
@@ -413,8 +414,13 @@ int main(void *arg)
             // integrate calculated pitch and roll with previous values
             pitch_f32 = pitch_f32 * 0.75f + gyro_pitch_f32 * 0.25f;
             roll_f32 = roll_f32 * 0.75f + gyro_roll_f32 * 0.25f;
-            printf("pitch_f32 = %.2f  roll_f32 = %.2f\n", pitch_f32, roll_f32);
         }
-        sleep(1);
+        sensor.delay_ms(1);
+
+        if (++cnt > 1000) {
+            cnt = 0;
+            printf("pitch_f32 = %.2f  roll_f32 = %.2f\n", pitch_f32, roll_f32);
+            printf("gyro_pitch_f32 = %.2f  gyro_roll_f32 = %.2f\n", gyro_pitch_f32, gyro_roll_f32);
+        }
     }
 }
