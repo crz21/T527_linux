@@ -11,15 +11,6 @@
 
 #define DEV_I2C "/dev/i2c-1"
 
-// 计算mlx9614实际温度值
-uint16_t mlx_data_transform(uint8_t Data[3])
-{
-    uint16_t temp;
-    temp = (Data[1] << 8) + Data[0];  // 高位与低位结合
-    temp = temp * 2 - 27315;          // 将数据扩大100倍
-    return temp;
-}
-
 int main()
 {
     int fd = open(DEV_I2C, O_RDWR);
@@ -78,11 +69,12 @@ int main()
 
     res = ioctl(fd, I2C_RDWR, &data);
     if (res < 0) printf("Read failed2\n");
-    printf("statue= %d %d %d %d\n", value[0], value[1], value[2], value[3]);
+
     humidity = (value[1] << 12) | (value[2] << 4) | (value[3] >> 4);
     humidity = (humidity * 100);
     humidity = humidity / 0x100000;
     printf("humidity= %d \n", humidity);
+    
     while (1) {
         sleep(1);
         reg_buf[0] = 0xAC;
@@ -109,5 +101,5 @@ int main()
         temperature = temperature / 0x100000;
         temperature = temperature - 50;
         printf("temp=[%d]\r\n", temperature);
-        }
+    }
 }

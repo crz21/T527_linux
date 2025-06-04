@@ -1,0 +1,5 @@
+1、cmake -S {源文件目录} -B {过程文件所需保存的目录}
+2、cmake .&&make
+
+一步生成方式
+cmake ..&&make
