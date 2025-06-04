@@ -4,4 +4,6 @@ file(GLOB SRC_LIST "./*.c")
 include_directories(../Inc)
 
 ADD_EXECUTABLE(BMI160_TEST ${SRC_LIST})
+
+# µ÷ÓÃmath¿â
 target_link_libraries(BMI160_TEST m)

@@ -27,7 +27,6 @@
 #define BMI160_ADDR 0x69
 #endif
 
-#define NOP (0xFF)
 struct bmi160_dev sensor;
 struct bmi160_sensor_data accel;
 struct bmi160_sensor_data gyro;
@@ -280,13 +279,19 @@ int main(void *arg)
 {
     int8_t rslt;
     static uint16_t cnt;
-
+#if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
     fd = open(DEV_OPERATION, O_RDWR);
     if (fd < 0) {
         perror("Fail to Open\n");
         return -1;
     }
-
+#elif (BMI160_PERIPHERAL == BMI160_I2C_INTF)
+    fd = open(DEV_OPERATION, O_RDWR);
+    if (fd < 0) {
+        perror("Fail to Open\n");
+        return -1;
+    }
+#endif
     set_bmi160_Ares();
     set_bmi160_Gres();
     get_bmi160_Ares();
@@ -299,12 +304,9 @@ int main(void *arg)
     sensor.delay_ms = mdelay;
     sensor.read_write_len = 32;
 
-    printf("INIT\n");
     rslt = bmi160_soft_reset(&sensor);
-    printf("INIT1\n");
     sensor.delay_ms(200);
     rslt = bmi160_init(&sensor);
-    printf("INIT2\n");
 
     /********************************************************************/
 
@@ -420,7 +422,6 @@ int main(void *arg)
         if (++cnt > 1000) {
             cnt = 0;
             printf("pitch_f32 = %.2f  roll_f32 = %.2f\n", pitch_f32, roll_f32);
-            printf("gyro_pitch_f32 = %.2f  gyro_roll_f32 = %.2f\n", gyro_pitch_f32, gyro_roll_f32);
         }
     }
 }
