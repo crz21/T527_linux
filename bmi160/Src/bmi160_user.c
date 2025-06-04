@@ -8,9 +8,25 @@
 
 #include "bmi160_user.h"
 
-#include "FreeRTOS.h"
-#include "stm32u0xx_hal.h"
-#include "task.h"
+#include <fcntl.h>
+#include <linux/i2c-dev.h>
+#include <linux/i2c.h>
+#include <math.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
+#define DEV_OPERATION "/dev/spidev1.0"
+#elif (BMI160_PERIPHERAL == BMI160_I2C_INTF)
+#define DEV_OPERATION "/dev/i2c-1"
+#define BMI160_ADDR 0x69
+#endif
+
 #define NOP (0xFF)
 struct bmi160_dev sensor;
 struct bmi160_sensor_data accel;
@@ -21,22 +37,17 @@ struct bmi160_int_settg int_config;
 BMI160_t imu_t;
 float aX_f32, aY_f32, aZ_f32;
 float gX_f32, gY_f32, gZ_f32;
-
 float accel_roll_f32, accel_pitch_f32;
 float gyro_roll_f32, gyro_pitch_f32;
-
 float acc_total_vector_f32 = 0;
-
 float yaw_f32, pitch_f32, roll_f32;
 uint64_t timer_u64 = 0;
 uint64_t lastTime_u64 = 0;
-
 uint8_t set_gyro_angles_u8 = 0;
 
 uint32_t loopHz_u64, loopTime_u64;
 // Set initial input parameters
 enum BMI160_Ascale { AFS_RAW = 0, AFS_2G, AFS_4G, AFS_8G, AFS_16G };
-
 enum BMI160_Gscale { GFS_RAW = 0, GFS_125DPS, GFS_250DPS, GFS_500DPS, GFS_1000DPS, GFS_2000DPS };
 
 // Set sensor range. This is for harware sensitivity
@@ -48,24 +59,21 @@ uint8_t BMI160_Gsens = GFS_1000DPS;
 // If you want raw readings, just select _RAW
 uint8_t BMI160_Ascale = AFS_2G;
 uint8_t BMI160_Gscale = GFS_1000DPS;
-
 uint8_t BMI160_Ascale_bit, BMI160_Gscale_bit;
 
 float bmi160_aRes, bmi160_gRes;
 
-static TaskHandle_t m_lbmi160_thread;
+int fd;
 
-uint8_t SPIx_ReadWriteByte(SPI_HandleTypeDef *hspi, uint8_t byte)
+void mdelay(uint32_t ms)
 {
-    uint8_t d_read, d_send = byte;
-    if (HAL_SPI_TransmitReceive(hspi, &d_send, &d_read, 1, SPITIMEOUT) != HAL_OK) {
-        d_read = 0xFF;
-    }
-    return d_read;
+    while (ms--) usleep(1000);
 }
 
 int8_t bmi160_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
 {
+    int res;
+
 #if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
     uint8_t tx_data[50] = {0};
     uint8_t i = 0;
@@ -77,8 +85,25 @@ int8_t bmi160_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t l
     for (i = 0; i < len; i++) data[i] = SPIx_ReadWriteByte(&hspi1, NOP);
     CS_DISABLE();
 #elif (BMI160_PERIPHERAL == BMI160_I2C_INTF)
-    HAL_I2C_Master_Transmit(&hi2c2, BMI160_ADDR, &reg_addr, 1, I2CTIMEOUT);
-    HAL_I2C_Master_Receive(&hi2c2, BMI160_ADDR, data, len, I2CTIMEOUT);
+    struct i2c_msg msgs[2];
+    struct i2c_rdwr_ioctl_data ioctl_data;
+
+    msgs[0].addr = BMI160_ADDR;
+    msgs[0].flags = 0;
+    msgs[0].len = 1;
+    msgs[0].buf = &reg_addr;
+
+    msgs[1].addr = BMI160_ADDR;
+    msgs[1].flags = I2C_M_RD;
+    msgs[1].len = len;
+    msgs[1].buf = data;
+
+    ioctl_data.msgs = msgs;
+    ioctl_data.nmsgs = 2;
+
+    res = ioctl(fd, I2C_RDWR, &ioctl_data);
+    if (res < 0) printf("bmi160 read failed\n");
+
 #endif
 
     return 0;
@@ -86,6 +111,7 @@ int8_t bmi160_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t l
 
 int8_t bmi160_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
 {
+    int res;
     uint8_t tx_data[50] = {0};
 #if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
     uint8_t i = 0;
@@ -96,9 +122,23 @@ int8_t bmi160_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t 
     for (i = 0; i < len; i++) SPIx_ReadWriteByte(&hspi1, tx_data[i]);
     CS_DISABLE();
 #elif (BMI160_PERIPHERAL == BMI160_I2C_INTF)
+    struct i2c_msg msg;
+    struct i2c_rdwr_ioctl_data ioctl_data;
+
     tx_data[0] = reg_addr;
     memcpy(&tx_data[1], data, len);
-    HAL_I2C_Master_Transmit(&hi2c2, BMI160_ADDR, tx_data, len + 1, I2CTIMEOUT);
+
+    msg.addr = BMI160_ADDR;
+    msg.flags = 0;
+    msg.len = len + 1;
+    msg.buf = &tx_data;
+
+    ioctl_data.msgs = &msg;
+    ioctl_data.nmsgs = 1;
+
+    res = ioctl(fd, I2C_RDWR, &ioctl_data);
+    if (res < 0) printf("bmi160 write failed\n");
+
 #endif
 
     return 0;
@@ -236,9 +276,15 @@ void get_bmi160_Gres()
     }
 }
 
-void bmi160_thread(void *arg)
+int main(void *arg)
 {
     int8_t rslt;
+
+    fd = open(DEV_OPERATION, O_RDWR);
+    if (fd < 0) {
+        perror("Fail to Open\n");
+        return -1;
+    }
 
     set_bmi160_Ares();
     set_bmi160_Gres();
@@ -249,12 +295,15 @@ void bmi160_thread(void *arg)
     sensor.intf = BMI160_PERIPHERAL;
     sensor.read = bmi160_read;
     sensor.write = bmi160_write;
-    sensor.delay_ms = vTaskDelay;
+    sensor.delay_ms = mdelay;
     sensor.read_write_len = 32;
 
+    printf("INIT\n");
     rslt = bmi160_soft_reset(&sensor);
+    printf("INIT1\n");
     sensor.delay_ms(200);
     rslt = bmi160_init(&sensor);
+    printf("INIT2\n");
 
     /********************************************************************/
 
@@ -262,7 +311,7 @@ void bmi160_thread(void *arg)
     uint8_t chipID = 0;
     uint16_t len = 1;
     rslt = bmi160_get_regs(reg_addr, &chipID, len, &sensor);
-
+    printf("chipID = %d\n", chipID);
     /********************************************************************/
 
     /* Select the Output data rate, range of accelerometer sensor */
@@ -364,9 +413,8 @@ void bmi160_thread(void *arg)
             // integrate calculated pitch and roll with previous values
             pitch_f32 = pitch_f32 * 0.75f + gyro_pitch_f32 * 0.25f;
             roll_f32 = roll_f32 * 0.75f + gyro_roll_f32 * 0.25f;
+            printf("pitch_f32 = %.2f  roll_f32 = %.2f\n", pitch_f32, roll_f32);
         }
-        vTaskDelay(pdMS_TO_TICKS(1));
+        sleep(1);
     }
 }
-
-void bmi160_thread_init(void) { xTaskCreate(bmi160_thread, "bmi160_task", 512, NULL, 5, &m_lbmi160_thread); }
