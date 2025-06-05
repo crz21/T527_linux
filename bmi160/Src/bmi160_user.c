@@ -9,8 +9,13 @@
 #include "bmi160_user.h"
 
 #include <fcntl.h>
+#if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
+#include <errno.h>
+#include <linux/spi/spidev.h>
+#elif (BMI160_PERIPHERAL == BMI160_I2C_INTF)
 #include <linux/i2c-dev.h>
 #include <linux/i2c.h>
+#endif
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -22,6 +27,9 @@
 
 #if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
 #define DEV_OPERATION "/dev/spidev1.0"
+static uint32_t SPI_MODE = SPI_MODE_0; /** CPOL=1 CPHA=1 */
+static uint8_t BITS_PER_WORD = 8;
+static uint32_t SPEED = 100 * 1000;
 #elif (BMI160_PERIPHERAL == BMI160_I2C_INTF)
 #define DEV_OPERATION "/dev/i2c-1"
 #define BMI160_ADDR 0x69
@@ -43,23 +51,23 @@ float yaw_f32, pitch_f32, roll_f32;
 uint64_t timer_u64 = 0;
 uint64_t lastTime_u64 = 0;
 uint8_t set_gyro_angles_u8 = 0;
-
 uint32_t loopHz_u64, loopTime_u64;
-// Set initial input parameters
+
+/** Set initial input parameters */
 enum BMI160_Ascale { AFS_RAW = 0, AFS_2G, AFS_4G, AFS_8G, AFS_16G };
 enum BMI160_Gscale { GFS_RAW = 0, GFS_125DPS, GFS_250DPS, GFS_500DPS, GFS_1000DPS, GFS_2000DPS };
 
-// Set sensor range. This is for harware sensitivity
+/** Set sensor range. This is for harware sensitivity */
 uint8_t BMI160_Asens = AFS_2G;
 uint8_t BMI160_Gsens = GFS_1000DPS;
 
-// Specify correct scale for readings.
-// This is for post-reading calculations
-// If you want raw readings, just select _RAW
+/** Specify correct scale for readings.
+ * This is for post-reading calculations
+ * If you want raw readings, just select _RAW
+ */
 uint8_t BMI160_Ascale = AFS_2G;
 uint8_t BMI160_Gscale = GFS_1000DPS;
 uint8_t BMI160_Ascale_bit, BMI160_Gscale_bit;
-
 float bmi160_aRes, bmi160_gRes;
 
 int fd;
@@ -69,20 +77,40 @@ void mdelay(uint32_t ms)
     while (ms--) usleep(1000);
 }
 
+#if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
+#define NOP (0xFF)
+
+int spi_transfer(uint8_t *tx_buf, uint8_t *rx_buf, int len)
+{
+    struct spi_ioc_transfer transfer;
+    int res;
+    memset(&transfer, 0, sizeof(struct spi_ioc_transfer));
+    transfer.tx_buf = (unsigned long)tx_buf;
+    transfer.rx_buf = (unsigned long)rx_buf;
+    transfer.len = len;
+    transfer.delay_usecs = 500;  // 发送完成后的延时
+    transfer.speed_hz = SPEED;
+    transfer.bits_per_word = BITS_PER_WORD;
+    transfer.tx_nbits = 1;   // 单线制
+    transfer.rx_nbits = 1;   // 单线制
+    transfer.cs_change = 1;  // 传输后把cs线松开
+
+    res = ioctl(fd, SPI_IOC_MESSAGE(1), &transfer);  // 触发transfer
+    return res;
+}
+#endif
+
 int8_t bmi160_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
 {
     int res;
-
 #if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
-    uint8_t tx_data[50] = {0};
+    uint8_t tx_data[200] = {0};
     uint8_t i = 0;
 
     memset(tx_data, 0xFF, len);
     tx_data[0] = reg_addr;
-    CS_ENABLE();
-    SPIx_ReadWriteByte(&hspi1, reg_addr);
-    for (i = 0; i < len; i++) data[i] = SPIx_ReadWriteByte(&hspi1, NOP);
-    CS_DISABLE();
+    for (i = 0; i < len; i++) tx_data[i + 1] = NOP;
+    res = spi_transfer(tx_data, data, len + 1);
 #elif (BMI160_PERIPHERAL == BMI160_I2C_INTF)
     struct i2c_msg msgs[2];
     struct i2c_rdwr_ioctl_data ioctl_data;
@@ -101,25 +129,21 @@ int8_t bmi160_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t l
     ioctl_data.nmsgs = 2;
 
     res = ioctl(fd, I2C_RDWR, &ioctl_data);
-    if (res < 0) printf("bmi160 read failed\n");
-
 #endif
-
+    if (res < 0) printf("ioctl : %s\n", strerror(errno));
     return 0;
 }
 
 int8_t bmi160_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
 {
+    uint8_t tx_data[200] = {0};
     int res;
-    uint8_t tx_data[50] = {0};
 #if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
     uint8_t i = 0;
-
-    memcpy(tx_data, data, len);
-    CS_ENABLE();
-    SPIx_ReadWriteByte(&hspi1, reg_addr);
-    for (i = 0; i < len; i++) SPIx_ReadWriteByte(&hspi1, tx_data[i]);
-    CS_DISABLE();
+    tx_data[0] = reg_addr;
+    for (i = 0; i < len; i++) tx_data[i + 1] = data[i];
+    res = spi_transfer(tx_data, NULL, len + 1);
+    sleep(1);
 #elif (BMI160_PERIPHERAL == BMI160_I2C_INTF)
     struct i2c_msg msg;
     struct i2c_rdwr_ioctl_data ioctl_data;
@@ -136,10 +160,8 @@ int8_t bmi160_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t 
     ioctl_data.nmsgs = 1;
 
     res = ioctl(fd, I2C_RDWR, &ioctl_data);
-    if (res < 0) printf("bmi160 write failed\n");
-
 #endif
-
+    if (res < 0) printf("ioctl : %s\n", strerror(errno));
     return 0;
 }
 
@@ -279,19 +301,22 @@ int main(void *arg)
 {
     int8_t rslt;
     static uint16_t cnt;
+
+    fd = open(DEV_OPERATION, O_RDWR);
+    if (fd < 0) {
+        perror("Fail to Open\n");
+        return -1;
+    } else
+        printf("init %s\n", DEV_OPERATION);
 #if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
-    fd = open(DEV_OPERATION, O_RDWR);
-    if (fd < 0) {
-        perror("Fail to Open\n");
-        return -1;
-    }
-#elif (BMI160_PERIPHERAL == BMI160_I2C_INTF)
-    fd = open(DEV_OPERATION, O_RDWR);
-    if (fd < 0) {
-        perror("Fail to Open\n");
-        return -1;
-    }
+    if (ioctl(fd, SPI_IOC_WR_MODE, &SPI_MODE) == -1) printf("err: can't set spi mode\n");
+    if (ioctl(fd, SPI_IOC_RD_MODE, &SPI_MODE) == -1) printf("err: can't set spi mode\n");
+    if (ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &BITS_PER_WORD) == -1) printf("can't set bits per word\n");
+    if (ioctl(fd, SPI_IOC_RD_BITS_PER_WORD, &BITS_PER_WORD) == -1) printf("can't get bits per word\n");
+    if (ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &SPEED) == -1) printf("can't set max speed hz\n");
+    if (ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &SPEED) == -1) printf("can't get max speed hz\n");
 #endif
+
     set_bmi160_Ares();
     set_bmi160_Gres();
     get_bmi160_Ares();
