@@ -8,11 +8,11 @@
 
 #include "bmi160_user.h"
 
-#include <fcntl.h>
-#if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
 #include <errno.h>
+#include <fcntl.h>
+#if (BMI160_DEVICE == BMI160_SPI_INTF)
 #include <linux/spi/spidev.h>
-#elif (BMI160_PERIPHERAL == BMI160_I2C_INTF)
+#elif (BMI160_DEVICE == BMI160_I2C_INTF)
 #include <linux/i2c-dev.h>
 #include <linux/i2c.h>
 #endif
@@ -25,12 +25,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
+#if (BMI160_DEVICE == BMI160_SPI_INTF)
 #define DEV_OPERATION "/dev/spidev1.0"
-static uint32_t SPI_MODE = SPI_MODE_0; /** CPOL=1 CPHA=1 */
-static uint8_t BITS_PER_WORD = 8;
-static uint32_t SPEED = 100 * 1000;
-#elif (BMI160_PERIPHERAL == BMI160_I2C_INTF)
+
+static uint32_t spi_mode = SPI_MODE_0; /** CPOL=1 CPHA=1 */
+static uint8_t bits_word = 8;
+static uint32_t speed = 200 * 1000;
+#elif (BMI160_DEVICE == BMI160_I2C_INTF)
 #define DEV_OPERATION "/dev/i2c-1"
 #define BMI160_ADDR 0x69
 #endif
@@ -72,29 +73,38 @@ float bmi160_aRes, bmi160_gRes;
 
 int fd;
 
+static void pabort(const char *s)
+{
+    if (errno != 0)
+        perror(s);
+    else
+        printf("%s\n", s);
+
+    abort();
+}
+
 void mdelay(uint32_t ms)
 {
     while (ms--) usleep(1000);
 }
 
-#if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
+#if (BMI160_DEVICE == BMI160_SPI_INTF)
 #define NOP (0xFF)
 
 int spi_transfer(uint8_t *tx_buf, uint8_t *rx_buf, int len)
 {
-    struct spi_ioc_transfer transfer;
     int res;
-    memset(&transfer, 0, sizeof(struct spi_ioc_transfer));
-    transfer.tx_buf = (unsigned long)tx_buf;
-    transfer.rx_buf = (unsigned long)rx_buf;
-    transfer.len = len;
-    transfer.delay_usecs = 500;  // 发送完成后的延时
-    transfer.speed_hz = SPEED;
-    transfer.bits_per_word = BITS_PER_WORD;
-    transfer.tx_nbits = 1;   // 单线制
-    transfer.rx_nbits = 1;   // 单线制
-    transfer.cs_change = 1;  // 传输后把cs线松开
-
+    struct spi_ioc_transfer transfer = {
+        .tx_buf = (unsigned long)tx_buf,
+        .rx_buf = (unsigned long)rx_buf,
+        .len = len,
+        .delay_usecs = 500,  // 发送完成后的延时
+        .speed_hz = speed,
+        .bits_per_word = bits_word,
+        .tx_nbits = 1,   // 单线制
+        .rx_nbits = 1,   // 单线制
+        .cs_change = 0,  // 传输后把cs线松开
+    };
     res = ioctl(fd, SPI_IOC_MESSAGE(1), &transfer);  // 触发transfer
     return res;
 }
@@ -103,7 +113,7 @@ int spi_transfer(uint8_t *tx_buf, uint8_t *rx_buf, int len)
 int8_t bmi160_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
 {
     int res;
-#if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
+#if (BMI160_DEVICE == BMI160_SPI_INTF)
     uint8_t tx_data[200] = {0};
     uint8_t i = 0;
 
@@ -111,7 +121,7 @@ int8_t bmi160_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t l
     tx_data[0] = reg_addr;
     for (i = 0; i < len; i++) tx_data[i + 1] = NOP;
     res = spi_transfer(tx_data, data, len + 1);
-#elif (BMI160_PERIPHERAL == BMI160_I2C_INTF)
+#elif (BMI160_DEVICE == BMI160_I2C_INTF)
     struct i2c_msg msgs[2];
     struct i2c_rdwr_ioctl_data ioctl_data;
 
@@ -130,7 +140,7 @@ int8_t bmi160_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t l
 
     res = ioctl(fd, I2C_RDWR, &ioctl_data);
 #endif
-    if (res < 0) printf("ioctl : %s\n", strerror(errno));
+    if (res < 1) pabort("can't send message");
     return 0;
 }
 
@@ -138,13 +148,13 @@ int8_t bmi160_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t 
 {
     uint8_t tx_data[200] = {0};
     int res;
-#if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
+#if (BMI160_DEVICE == BMI160_SPI_INTF)
     uint8_t i = 0;
     tx_data[0] = reg_addr;
     for (i = 0; i < len; i++) tx_data[i + 1] = data[i];
     res = spi_transfer(tx_data, NULL, len + 1);
     sleep(1);
-#elif (BMI160_PERIPHERAL == BMI160_I2C_INTF)
+#elif (BMI160_DEVICE == BMI160_I2C_INTF)
     struct i2c_msg msg;
     struct i2c_rdwr_ioctl_data ioctl_data;
 
@@ -161,7 +171,7 @@ int8_t bmi160_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t 
 
     res = ioctl(fd, I2C_RDWR, &ioctl_data);
 #endif
-    if (res < 0) printf("ioctl : %s\n", strerror(errno));
+    if (res < 1) pabort("can't send message");
     return 0;
 }
 
@@ -308,13 +318,13 @@ int main(void *arg)
         return -1;
     } else
         printf("init %s\n", DEV_OPERATION);
-#if (BMI160_PERIPHERAL == BMI160_SPI_INTF)
-    if (ioctl(fd, SPI_IOC_WR_MODE, &SPI_MODE) == -1) printf("err: can't set spi mode\n");
-    if (ioctl(fd, SPI_IOC_RD_MODE, &SPI_MODE) == -1) printf("err: can't set spi mode\n");
-    if (ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &BITS_PER_WORD) == -1) printf("can't set bits per word\n");
-    if (ioctl(fd, SPI_IOC_RD_BITS_PER_WORD, &BITS_PER_WORD) == -1) printf("can't get bits per word\n");
-    if (ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &SPEED) == -1) printf("can't set max speed hz\n");
-    if (ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &SPEED) == -1) printf("can't get max speed hz\n");
+#if (BMI160_DEVICE == BMI160_SPI_INTF)
+    if (ioctl(fd, SPI_IOC_WR_MODE, &spi_mode) == -1) printf("err: can't set spi mode\n");
+    if (ioctl(fd, SPI_IOC_RD_MODE, &spi_mode) == -1) printf("err: can't set spi mode\n");
+    if (ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bits_word) == -1) printf("can't set bits per word\n");
+    if (ioctl(fd, SPI_IOC_RD_BITS_PER_WORD, &bits_word) == -1) printf("can't get bits per word\n");
+    if (ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) == -1) printf("can't set max speed hz\n");
+    if (ioctl(fd, SPI_IOC_RD_MAX_SPEED_HZ, &speed) == -1) printf("can't get max speed hz\n");
 #endif
 
     set_bmi160_Ares();
@@ -323,7 +333,7 @@ int main(void *arg)
     get_bmi160_Gres();
 
     sensor.id = 0;
-    sensor.intf = BMI160_PERIPHERAL;
+    sensor.intf = BMI160_DEVICE;
     sensor.read = bmi160_read;
     sensor.write = bmi160_write;
     sensor.delay_ms = mdelay;
