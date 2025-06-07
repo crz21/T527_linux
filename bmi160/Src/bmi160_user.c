@@ -28,9 +28,9 @@
 #if (BMI160_DEVICE == BMI160_SPI_INTF)
 #define DEV_OPERATION "/dev/spidev1.0"
 
-static uint32_t spi_mode = SPI_MODE_0; /** CPOL=1 CPHA=1 */
+static uint32_t spi_mode = SPI_MODE_3; /** CPOL=1 CPHA=1 */
 static uint8_t bits_word = 8;
-static uint32_t speed = 200 * 1000;
+static uint32_t speed = 500 * 1000;
 #elif (BMI160_DEVICE == BMI160_I2C_INTF)
 #define DEV_OPERATION "/dev/i2c-1"
 #define BMI160_ADDR 0x69
@@ -91,21 +91,32 @@ void mdelay(uint32_t ms)
 #if (BMI160_DEVICE == BMI160_SPI_INTF)
 #define NOP (0xFF)
 
-int spi_transfer(uint8_t *tx_buf, uint8_t *rx_buf, int len)
+int spi_transfer(uint8_t *reg, int reg_len, uint8_t *tx_buf, uint8_t *rx_buf, int len)
 {
     int res;
-    struct spi_ioc_transfer transfer = {
-        .tx_buf = (unsigned long)tx_buf,
-        .rx_buf = (unsigned long)rx_buf,
-        .len = len,
-        .delay_usecs = 500,  // 发送完成后的延时
-        .speed_hz = speed,
-        .bits_per_word = bits_word,
-        .tx_nbits = 1,   // 单线制
-        .rx_nbits = 1,   // 单线制
-        .cs_change = 0,  // 传输后把cs线松开
-    };
-    res = ioctl(fd, SPI_IOC_MESSAGE(1), &transfer);  // 触发transfer
+    struct spi_ioc_transfer transfer[2];
+
+    transfer[0].tx_buf = (unsigned long)reg;
+    transfer[0].rx_buf = (unsigned long)NULL;
+    transfer[0].len = reg_len;
+    transfer[0].delay_usecs = 500;  // 发送完成后的延时
+    transfer[0].speed_hz = speed;
+    transfer[0].bits_per_word = bits_word;
+    transfer[0].tx_nbits = 1;   // 单线制
+    transfer[0].rx_nbits = 1;   // 单线制
+    transfer[0].cs_change = 0;  // 传输后把cs线松开
+
+    transfer[1].tx_buf = (unsigned long)tx_buf;
+    transfer[1].rx_buf = (unsigned long)rx_buf;
+    transfer[1].len = len;
+    transfer[1].delay_usecs = 500;  // 发送完成后的延时
+    transfer[1].speed_hz = speed;
+    transfer[1].bits_per_word = bits_word;
+    transfer[1].tx_nbits = 1;   // 单线制
+    transfer[1].rx_nbits = 1;   // 单线制
+    transfer[1].cs_change = 0;  // 传输后把cs线松开
+
+    res = ioctl(fd, SPI_IOC_MESSAGE(2), &transfer);  // 触发transfer
     return res;
 }
 #endif
@@ -118,9 +129,8 @@ int8_t bmi160_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t l
     uint8_t i = 0;
 
     memset(tx_data, 0xFF, len);
-    tx_data[0] = reg_addr;
-    for (i = 0; i < len; i++) tx_data[i + 1] = NOP;
-    res = spi_transfer(tx_data, data, len + 1);
+    for (i = 0; i < len; i++) tx_data[i] = NOP;
+    res = spi_transfer(&reg_addr, 1, tx_data, data, len);
 #elif (BMI160_DEVICE == BMI160_I2C_INTF)
     struct i2c_msg msgs[2];
     struct i2c_rdwr_ioctl_data ioctl_data;
@@ -151,8 +161,8 @@ int8_t bmi160_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t 
 #if (BMI160_DEVICE == BMI160_SPI_INTF)
     uint8_t i = 0;
     tx_data[0] = reg_addr;
-    for (i = 0; i < len; i++) tx_data[i + 1] = data[i];
-    res = spi_transfer(tx_data, NULL, len + 1);
+    for (i = 0; i < len; i++) tx_data[i] = data[i];
+    res = spi_transfer(&reg_addr, 1, tx_data, NULL, len);
     sleep(1);
 #elif (BMI160_DEVICE == BMI160_I2C_INTF)
     struct i2c_msg msg;
