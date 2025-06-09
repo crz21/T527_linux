@@ -2,4 +2,5 @@
 2、cmake .&&make
 
 一步生成方式
-cmake ..&&make
+cmake ..        &&                                make
+      当前文件夹  当前面条件为是的情况下后面条件生成
