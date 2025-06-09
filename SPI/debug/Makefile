@@ -1,0 +1,3 @@
+OBJS = *.OBJS
+ODIR = obj
+$()
