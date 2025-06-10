@@ -11,6 +11,7 @@ CUR_OBJS=${patsubst %.c, %.o, ${CUR_SOURCE}}
 export CC BIN OBJS_DIR BIN_DIR ROOT_DIR
 
 all:$(SUBDIRS) $(CUR_OBJS) DEBUG
+.PHONY:all
 $(SUBDIRS):ECHO
 	make -C $@
 DEBUG:ECHO
