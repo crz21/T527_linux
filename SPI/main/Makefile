@@ -1,4 +1,4 @@
-INCLUDE_DIR=-I../
+INCLUDE_DIR=-I../device
 C_FLAGS=
 SUBDIRS=$(shell ls -l | grep ^d | awk '{print $$9}')
 CUR_SOURCE=${wildcard *.c}

@@ -1,5 +1,7 @@
 #include <stdint.h>
-
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 #include "spi.h"
 
 int main(int argc, char *argv[])

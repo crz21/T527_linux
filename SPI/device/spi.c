@@ -11,10 +11,10 @@
 #include <unistd.h>
 
 #define DEV_SPI "/dev/spidev1.0"
-#define SPI_MODE_0 (0 | 0) /* (original MicroWire) */
-#define SPI_MODE_1 (0 | SPI_CPHA)
-#define SPI_MODE_2 (SPI_CPOL | 0)
-#define SPI_MODE_3 (SPI_CPOL | SPI_CPHA)
+// #define SPI_MODE_0 (0 | 0) /* (original MicroWire) */
+// #define SPI_MODE_1 (0 | SPI_CPHA)
+// #define SPI_MODE_2 (SPI_CPOL | 0)
+// #define SPI_MODE_3 (SPI_CPOL | SPI_CPHA)
 
 static uint32_t spi_mode = SPI_MODE_0;  // | SPI_3WIRE;
 static uint8_t bits_word = 8;
@@ -30,22 +30,22 @@ static void pabort(const char *s)
     abort();
 }
 
-// mosi¸úmisoÍ¬Ê±¹¤×÷£¬´Ótx_bufÖÐÈ¡³öÊý¾Ý·¢ËÍµÄÍ¬Ê±£¬Ò²»á¶ÁÈ¡Êý¾Ý´æÈërx_buf
+// mosiï¿½ï¿½misoÍ¬Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½tx_bufï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½Ý·ï¿½ï¿½Íµï¿½Í¬Ê±ï¿½ï¿½Ò²ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½rx_buf
 int spi_transfer(int fd, uint8_t *tx, uint8_t *rx, uint32_t len)
 {
     struct spi_ioc_transfer transfer = {
         .tx_buf = (unsigned long)tx,
         .rx_buf = (unsigned long)rx,
         .len = len,
-        .delay_usecs = 500,  // ·¢ËÍÍê³ÉºóµÄÑÓÊ±
+        .delay_usecs = 500,  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Éºï¿½ï¿½ï¿½ï¿½Ê±
         .speed_hz = speed,
         .bits_per_word = bits_word,
-        .tx_nbits = 1,   // µ¥ÏßÖÆ
-        .rx_nbits = 1,   // µ¥ÏßÖÆ
-        .cs_change = 0,  // ´«Êäºó°ÑcsÏßËÉ¿ª
+        .tx_nbits = 1,   // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        .rx_nbits = 1,   // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        .cs_change = 0,  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½csï¿½ï¿½ï¿½É¿ï¿½
     };
 
-    int res = ioctl(fd, SPI_IOC_MESSAGE(1), &transfer);  // ´¥·¢transfer
+    int res = ioctl(fd, SPI_IOC_MESSAGE(1), &transfer);  // ï¿½ï¿½ï¿½ï¿½transfer
     if (res < 1) pabort("can't send spi message");
 
     return res;
@@ -59,7 +59,7 @@ int spi_init(int *fd)
         return -1;
     }
 
-    /** ÅäÖÃspiÄ£Ê½ */
+    /** ï¿½ï¿½ï¿½ï¿½spiÄ£Ê½ */
     if (ioctl(*fd, SPI_IOC_WR_MODE32, &spi_mode) == -1) printf("err: can't set spi mode");
     if (ioctl(*fd, SPI_IOC_RD_MODE32, &spi_mode) == -1) printf("can't get spi mode");
     if (ioctl(*fd, SPI_IOC_WR_BITS_PER_WORD, &bits_word) == -1) printf("can't set bits per word");
