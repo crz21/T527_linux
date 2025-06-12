@@ -1,5 +1,5 @@
-#include <stdio.h>
-#include "led_gpio.h"
+
+#include "i2c_bmi160.h"
 
 int main(int argc, char *argv[])
 {

@@ -1,0 +1,28 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "allwinner,sun55i-t527";
+
+    fragment@0 {
+        target-path = "/";
+        __overlay__ {
+            dt-test@0{
+                compatible = "walnut"
+            };
+        };
+    };
+};
+
+&i2c1{
+	clock-frequency = <100000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c1>;
+	status = "okay";
+
+	i2c_bmi160@68 {
+		compatible = "barco,i2c_bmi160";
+		reg = <0x68>;
+		status = "okay";
+	};
+};
