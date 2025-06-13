@@ -31,11 +31,7 @@ cmake ..        &&                                make
 6、在终端上使用mknod根据设备号来进行创建设备文件(节点)
 (也可以在驱动使用class_create创建设备类、在类的下面device_create创建设备节点)
 
-7、dts中如果是扩展则需要__overlay__ {}
-
-8、<name>[@<unit_address>] 则后需要跟 reg = <unit_address>
-
-9、设备树中属性的意义
+7、设备树中属性的意义
 
         a、compatible：设备节点中对应的节点信息已经被内核构造成struct platform_device。
         驱动可以通过相应的函数从中提取信息。compatible属性是用来查找节点的方法之一，另外还可以通过节点名或节点路径查找指定节点。
@@ -58,10 +54,11 @@ cmake ..        &&                                make
 
         f、ranges：属性值类型：任意数量的 <子地址、父地址、地址长度>编码。
 
-10、节点aliases：别名
+8、节点aliases：别名
  
-11、设备树格式
+9、设备树插件格式
 
+ 格式一
         /dts-v1/;
         /plugin/;
 
@@ -91,14 +88,27 @@ cmake ..        &&                                make
 
         第7-8行： 我们要插入的设备及节点或者要引用(追加)的设备树节点放在__overlay__ {…}内，你可以增加、修改或者覆盖主设备树的节点。
 
-12、命令行
+ 格式二
+        /dts-v1/;
+        /plugin/;
+
+        &{/} {
+        /*此处在根节点"/"下,添加要插入的节点或者属性*/
+        };
+
+        &XXXXX {
+        /*此处在节点"XXXXX"下,添加要插入的节点或者属性*/
+        };
+
+10、命令行
+ dts：Device TreeSource
+ dtc：DeviceTree Compiler
+ dtb：DeviceTree Blob
+ dtbo：Device Tree Blob Overlay
 
         dtc -@ -I dts -O dtb -o sun55i-t527-test.dtbo sun55i-t527-test.dts
 
-        dts：Device TreeSource
-        dtc：DeviceTree Compiler
-        dtb：DeviceTree Blob
-        dtbo：Device Tree Blob Overlay
+
     
              dtc         -o
         dts -----> dtb -----> dtbo
