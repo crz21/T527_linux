@@ -12,7 +12,7 @@
 int main(int argc, char *argv[])
 {
     short resive_data[6];  // 保存收到的 mpu6050转换结果数据，依次为 AX(x轴角度), AY, AZ 。GX(x轴加速度), GY ,GZ
-    uint8_t id_buf = 0;
+    int id_buf = 0;
     int error;
     int fd = open(DEV_OPERATION, O_RDWR);
     if (fd < 0) {
