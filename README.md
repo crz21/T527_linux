@@ -36,6 +36,7 @@ cmake ..        &&                                make
 8、<name>[@<unit_address>] 则后需要跟 reg = <unit_address>
 
 9、设备树中键的意义
+
         a、compatible：设备节点中对应的节点信息已经被内核构造成struct platform_device。
         驱动可以通过相应的函数从中提取信息。compatible属性是用来查找节点的方法之一，另外还可以通过节点名或节点路径查找指定节点。
 
