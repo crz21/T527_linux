@@ -91,35 +91,35 @@ cmake ..        &&                                make
 
         第7-8行： 我们要插入的设备及节点或者要引用(追加)的设备树节点放在__overlay__ {…}内，你可以增加、修改或者覆盖主设备树的节点。
 
-dtc -@ -I dts -O dtb -o sun55i-t527-test.dtbo sun55i-t527-test.dts
+        dtc -@ -I dts -O dtb -o sun55i-t527-test.dtbo sun55i-t527-test.dts
 
-dts：Device TreeSource
-dtc：DeviceTree Compiler
-dtb：DeviceTree Blob
-dtbo：Device Tree Blob Overlay
+        dts：Device TreeSource
+        dtc：DeviceTree Compiler
+        dtb：DeviceTree Blob
+        dtbo：Device Tree Blob Overlay
     
-     dtc         -o
-dts -----> dtb -----> dtbo
+             dtc         -o
+        dts -----> dtb -----> dtbo
 
 
- -@, --symbols
-        Enable generation of symbols
+        -@, --symbols
+                Enable generation of symbols
 
--I, --in-format <arg>
-        Input formats are:
-                dts - device tree source text
-                dtb - device tree blob
-                fs  - /proc/device-tree style directory
+        -I, --in-format <arg>
+                Input formats are:
+                        dts - device tree source text
+                        dtb - device tree blob
+                        fs  - /proc/device-tree style directory
 
- -O, --out-format <arg>
-        Output formats are:
-                dts - device tree source text
-                dtb - device tree blob
-                yaml - device tree encoded as YAML
-                asm - assembler source
+        -O, --out-format <arg>
+                Output formats are:
+                        dts - device tree source text
+                        dtb - device tree blob
+                        yaml - device tree encoded as YAML
+                        asm - assembler source
 
- -o, --out <arg>
-        Output file
+        -o, --out <arg>
+                Output file
 
 
 
