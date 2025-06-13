@@ -17,20 +17,6 @@
 #include <linux/types.h>
 #include <linux/uaccess.h>
 
-/** 实现入口函数xxx_init()和卸载函数xxx_exit()
-
-申请设备号 register_chrdev_region()
-
-初始化字符设备，cdev_init函数、cdev_add函数
-
-硬件初始化，如时钟寄存器配置使能，GPIO设置为输入输出模式等。
-
-构建file_operation结构体内容，实现硬件各个相关的操作
-
-在终端上使用mknod根据设备号来进行创建设备文件(节点)
-(也可以在驱动使用class_create创建设备类、在类的下面device_create创建设备节点)
-*/
-
 #define DEV_NAME "I2C1_BMI160"
 #define DEV_CNT (1)
 
