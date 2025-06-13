@@ -11,6 +11,7 @@
             pinctrl-0 = <&pinctrl_i2c1>;
             #address-cells = <1>;
             #size-cells = <0>;
+			status = "okay";
 			bmi160@69{
 				compatible = "barco,bmi160";
 				status = "okay";

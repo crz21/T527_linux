@@ -28,32 +28,32 @@ struct device *device_bmi160;            // 保存创建的设备
 struct device_node *bmi160_device_node;  // 设备树节点结构体
 
 /*------------------IIC设备内容----------------------*/
-struct i2c_client *bmi160_client = NULL;  // 保存mpu6050设备对应的i2c_client结构体，匹配成功后由.prob函数带回。
+struct i2c_client *bmi160_client = NULL;  // 保存bmi160设备对应的i2c_client结构体，匹配成功后由.prob函数带回。
 
-static int i2c_write_bmi160(struct i2c_client *bmi160_client, uint8_t address, uint8_t data)
-{
-    int error = 0;
-    uint8_t write_data[2];
-    struct i2c_msg send_msg;  // 要发送的数据结构体
+// static int i2c_write_bmi160(struct i2c_client *bmi160_client, uint8_t address, uint8_t data)
+// {
+//     int error = 0;
+//     uint8_t write_data[2];
+//     struct i2c_msg send_msg;  // 要发送的数据结构体
 
-    /*设置要发送的数据*/
-    write_data[0] = address;
-    write_data[1] = data;
+//     /*设置要发送的数据*/
+//     write_data[0] = address;
+//     write_data[1] = data;
 
-    /*发送 iic要写入的地址 reg*/
-    send_msg.addr = bmi160_client->addr;  // mpu6050在 iic 总线上的地址
-    send_msg.flags = 0;                   // 标记为发送数据
-    send_msg.buf = write_data;            // 写入的首地址
-    send_msg.len = 2;                     // reg长度
+//     /*发送 iic要写入的地址 reg*/
+//     send_msg.addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
+//     send_msg.flags = 0;                   // 标记为发送数据
+//     send_msg.buf = write_data;            // 写入的首地址
+//     send_msg.len = 2;                     // reg长度
 
-    /*执行发送*/
-    error = i2c_transfer(bmi160_client->adapter, &send_msg, 1);
-    if (error != 1) {
-        printk(KERN_DEBUG "\n i2c_transfer error \n");
-        return -1;
-    }
-    return 0;
-}
+//     /*执行发送*/
+//     error = i2c_transfer(bmi160_client->adapter, &send_msg, 1);
+//     if (error != 1) {
+//         printk(KERN_DEBUG "\n i2c_transfer error \n");
+//         return -1;
+//     }
+//     return 0;
+// }
 
 static int i2c_read_bmi160(struct i2c_client *bmi160_client, uint8_t address, void *data, uint32_t length)
 {
@@ -61,13 +61,13 @@ static int i2c_read_bmi160(struct i2c_client *bmi160_client, uint8_t address, vo
     uint8_t address_data = address;
     struct i2c_msg bmi160_msg[2];
     /*设置读取位置msg*/
-    bmi160_msg[0].addr = bmi160_client->addr;  // mpu6050在 iic 总线上的地址
+    bmi160_msg[0].addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
     bmi160_msg[0].flags = 0;                   // 标记为发送数据
     bmi160_msg[0].buf = &address_data;         // 写入的首地址
     bmi160_msg[0].len = 1;                     // 写入长度
 
     /*设置读取位置msg*/
-    bmi160_msg[1].addr = bmi160_client->addr;  // mpu6050在 iic 总线上的地址
+    bmi160_msg[1].addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
     bmi160_msg[1].flags = I2C_M_RD;            // 标记为读取数据
     bmi160_msg[1].buf = data;                  // 读取得到的数据保存位置
     bmi160_msg[1].len = length;                // 读取长度
@@ -97,7 +97,7 @@ static int bmi160_init(void)
 /** 字符设备操作函数集，open */
 static int bmi160_open(struct inode *inode, struct file *filp)
 {
-    /*向 mpu6050 发送配置数据，让mpu6050处于正常工作状态*/
+    /*向 bmi160 发送配置数据，让bmi160处于正常工作状态*/
     bmi160_init();
     return 0;
 }
@@ -106,10 +106,11 @@ static int bmi160_open(struct inode *inode, struct file *filp)
 static int bmi160_release(struct inode *inode, struct file *filp) { return 0; }
 
 /** 字符设备操作函数集，read */
-ssize_t bmi160_read(struct file *filp, char __user *buf, size_t len, loff_t *off) { return 0; }
-
-/** 字符设备操作函数集，write */
-ssize_t bmi160_write(struct file *filp, const char __user *buf, size_t len, loff_t *off) { return 0; }
+ssize_t bmi160_read(struct file *filp, char __user *buf, size_t len, loff_t *off)
+{
+    i2c_read_bmi160(bmi160_client, BMI160_CHIP_ID_ADDR, buf, 1);
+    return 0;
+}
 
 /** 字符设备操作函数集，结构体 */
 static struct file_operations bmi160_chr_dev_fops = {
@@ -117,7 +118,6 @@ static struct file_operations bmi160_chr_dev_fops = {
     .open = bmi160_open,
     .release = bmi160_release,
     .read = bmi160_read,
-    .write = bmi160_write,
 };
 /** 字符设备操作函数集 end */
 
@@ -136,27 +136,27 @@ static int bmi160_probe(struct i2c_client *client, const struct i2c_device_id *i
         goto alloc_err;
     }
 
-    // 关联字符设备结构体cdev与文件操作结构体file_operations
+    /** 关联字符设备结构体cdev与文件操作结构体file_operations */
     bmi160_chr_dev.owner = THIS_MODULE;
     cdev_init(&bmi160_chr_dev, &bmi160_chr_dev_fops);
 
-    // 添加设备至cdev_map散列表中
+    /** 添加设备至cdev_map散列表中 */
     ret = cdev_add(&bmi160_chr_dev, bmi160_devno, DEV_CNT);
     if (ret < 0) {
         printk("fail to add cdev\n");
         goto add_err;
     }
 
-    /*创建类 */
+    /** 创建类 */
     class_bmi160 = class_create(THIS_MODULE, DEV_NAME);
 
-    /*创建设备 DEV_NAME 指定设备名，*/
+    /** 创建设备 DEV_NAME 指定设备名 */
     device_bmi160 = device_create(class_bmi160, NULL, bmi160_devno, NULL, DEV_NAME);
     bmi160_client = client;
     return 0;
 
 add_err:
-    // 添加设备失败时，需要注销设备号
+    /** 添加设备失败时，需要注销设备号 */
     unregister_chrdev_region(bmi160_devno, DEV_CNT);
     printk("\n error! \n");
 alloc_err:
@@ -166,7 +166,7 @@ alloc_err:
 
 static int bmi160_remove(struct i2c_client *client)
 {
-    /*删除设备*/
+    /** 删除设备 */
     device_destroy(class_bmi160, bmi160_devno);       // 清除设备
     class_destroy(class_bmi160);                      // 清除类
     cdev_del(&bmi160_chr_dev);                        // 清除设备号

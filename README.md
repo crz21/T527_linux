@@ -59,6 +59,7 @@ cmake ..        &&                                make
 9、设备树插件格式
 
  格式一
+
         /dts-v1/;
         /plugin/;
 
@@ -89,6 +90,7 @@ cmake ..        &&                                make
         第7-8行： 我们要插入的设备及节点或者要引用(追加)的设备树节点放在__overlay__ {…}内，你可以增加、修改或者覆盖主设备树的节点。
 
  格式二
+
         /dts-v1/;
         /plugin/;
 
@@ -101,11 +103,14 @@ cmake ..        &&                                make
         };
 
 10、命令行
- dts：Device TreeSource
- dtc：DeviceTree Compiler
- dtb：DeviceTree Blob
- dtbo：Device Tree Blob Overlay
 
+文件名
+        dts：Device TreeSource
+        dtc：DeviceTree Compiler
+        dtb：DeviceTree Blob
+        dtbo：Device Tree Blob Overlay
+
+命令行
         dtc -@ -I dts -O dtb -o sun55i-t527-test.dtbo sun55i-t527-test.dts
 
 
@@ -133,5 +138,6 @@ cmake ..        &&                                make
         -o, --out <arg>
                 Output file
 
-
+11、加载命令行
+        sudo insmod i2c_bmi160.ko
 

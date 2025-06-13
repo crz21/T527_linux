@@ -99,24 +99,24 @@ int spi_transfer(uint8_t *reg, int reg_len, uint8_t *tx_buf, uint8_t *rx_buf, in
     transfer[0].tx_buf = (unsigned long)reg;
     transfer[0].rx_buf = (unsigned long)NULL;
     transfer[0].len = reg_len;
-    transfer[0].delay_usecs = 500;  // ·¢ËÍÍê³ÉºóµÄÑÓÊ±
+    transfer[0].delay_usecs = 500;  // å‘é€å®Œæˆåçš„å»¶æ—¶
     transfer[0].speed_hz = speed;
     transfer[0].bits_per_word = bits_word;
-    transfer[0].tx_nbits = 1;   // µ¥ÏßÖÆ
-    transfer[0].rx_nbits = 1;   // µ¥ÏßÖÆ
-    transfer[0].cs_change = 0;  // ´«Êäºó°ÑcsÏßËÉ¿ª
+    transfer[0].tx_nbits = 1;   // å•çº¿åˆ¶
+    transfer[0].rx_nbits = 1;   // å•çº¿åˆ¶
+    transfer[0].cs_change = 0;  // ä¼ è¾“åæŠŠcsçº¿æ¾å¼€
 
     transfer[1].tx_buf = (unsigned long)tx_buf;
     transfer[1].rx_buf = (unsigned long)rx_buf;
     transfer[1].len = len;
-    transfer[1].delay_usecs = 500;  // ·¢ËÍÍê³ÉºóµÄÑÓÊ±
+    transfer[1].delay_usecs = 500;  // å‘é€å®Œæˆåçš„å»¶æ—¶
     transfer[1].speed_hz = speed;
     transfer[1].bits_per_word = bits_word;
-    transfer[1].tx_nbits = 1;   // µ¥ÏßÖÆ
-    transfer[1].rx_nbits = 1;   // µ¥ÏßÖÆ
-    transfer[1].cs_change = 0;  // ´«Êäºó°ÑcsÏßËÉ¿ª
+    transfer[1].tx_nbits = 1;   // å•çº¿åˆ¶
+    transfer[1].rx_nbits = 1;   // å•çº¿åˆ¶
+    transfer[1].cs_change = 0;  // ä¼ è¾“åæŠŠcsçº¿æ¾å¼€
 
-    res = ioctl(fd, SPI_IOC_MESSAGE(2), &transfer);  // ´¥·¢transfer
+    res = ioctl(fd, SPI_IOC_MESSAGE(2), &transfer);  // è§¦å‘transfer
     return res;
 }
 #endif

@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.25.1)
 
-# ¹¤³ÌÎªbmi160
+# å·¥ç¨‹ä¸ºbmi160
 project(bmi160)
 
-# Ìí¼ÓÎÄ¼şµ½ÁíÒ»¸öÎÄ¼ş
+# æ·»åŠ æ–‡ä»¶åˆ°å¦ä¸€ä¸ªæ–‡ä»¶
 add_subdirectory(./Src ./bin)
