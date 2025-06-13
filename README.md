@@ -61,6 +61,7 @@ cmake ..        &&                                make
 10、节点aliases：别名
  
 11、设备树格式
+
         /dts-v1/;
         /plugin/;
 
