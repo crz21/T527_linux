@@ -91,6 +91,8 @@ cmake ..        &&                                make
 
         第7-8行： 我们要插入的设备及节点或者要引用(追加)的设备树节点放在__overlay__ {…}内，你可以增加、修改或者覆盖主设备树的节点。
 
+12、命令行
+
         dtc -@ -I dts -O dtb -o sun55i-t527-test.dtbo sun55i-t527-test.dts
 
         dts：Device TreeSource
