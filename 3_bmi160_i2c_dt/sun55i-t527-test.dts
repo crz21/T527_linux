@@ -2,44 +2,37 @@
 /plugin/;
 
 / {
+	compatible = "barco,bmi160";
 	fragment@0 {
-		compatible = "barco,bmi160";
 		target = <&i2c1>;
 		__overlay__ {
+			clock-frequency = <100000>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_i2c1>;
 			#address-cells = <1>;
 			#size-cells = <0>;
 			status = "okay";
-			bmi160@0{
+			bmi160@69{
 				compatible = "barco,bmi160";
 				clock-frequency = <100000>;
 				pinctrl-names = "default";
 				pinctrl-0 = <&pinctrl_i2c1>;
 				status = "okay";
-				reg = <0>;
-
-				
-				// dc-gpios = <&pio  8 9 0>;
-				// reset-gpios = <&pio 8 7 1>;
-				// rotate = <270>;
-				// buswidth = <8>;
-				// regwidth = <10>;
-				// fps = <30>;
-				// bgr = <0> ;
-				// debug = <0x00>;
+				reg = <0x69>;
 			};
 		};
 	};
 };
 
-// &i2c1{
-// 	clock-frequency = <100000>;
-// 	pinctrl-names = "default";
-// 	pinctrl-0 = <&pinctrl_i2c1>;
-// 	status = "okay";
+&i2c1{
+	clock-frequency = <100000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c1>;
+	status = "okay";
 
-// 	i2c_bmi160@68 {
-// 		compatible = "barco,i2c_bmi160";
-// 		reg = <0x68>;
-// 		status = "okay";
-// 	};
-// };
+	i2c_bmi160@68 {
+		compatible = "barco,i2c_bmi160";
+		reg = <0x68>;
+		status = "okay";
+	};
+};

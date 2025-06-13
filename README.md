@@ -16,7 +16,7 @@ cmake ..        &&                                make
 
 
 
-三、DATATREE
+三、DEVICETREE
 
 1、实现入口函数xxx_init()和卸载函数xxx_exit()
 
@@ -35,7 +35,7 @@ cmake ..        &&                                make
 
 8、<name>[@<unit_address>] 则后需要跟 reg = <unit_address>
 
-9、设备树中键的意义
+9、设备树中属性的意义
 
         a、compatible：设备节点中对应的节点信息已经被内核构造成struct platform_device。
         驱动可以通过相应的函数从中提取信息。compatible属性是用来查找节点的方法之一，另外还可以通过节点名或节点路径查找指定节点。
@@ -54,8 +54,42 @@ cmake ..        &&                                make
         "gpio-controller"，用来说明该节点描述的是一个gpio控制器
         "#gpio-cells"，用来描述gpio使用节点的属性一个cell的内容，即 `属性 = <&引用GPIO节点别名 GPIO标号 工作模式>
 
+        e、status：状态属性用于指示设备的“操作状态”，通过status可以去禁止设备或者启用设备，可用的操作状态如下表。默认情况下不设置status属性设备是使能的。
+
+        f、ranges：属性值类型：任意数量的 <子地址、父地址、地址长度>编码。
+
 10、节点aliases：别名
  
+11、设备树格式
+        /dts-v1/;
+        /plugin/;
+
+        / {
+                fragment@0 {
+                target-path = "/";
+                __overlay__ {
+                        /*在此添加要插入的节点*/
+                        .......
+                };
+                };
+
+                fragment@1 {
+                target = <&XXXXX>;
+                __overlay__ {
+                        /*在此添加要插入的节点*/
+                        .......
+                };
+                };
+        .......
+        };
+        第1行： 用于指定dts的版本。
+
+        第2行： 表示允许使用未定义的引用并记录它们，设备树插件中可以引用主设备树中的节点，而这些“引用的节点”对于设备树插件来说就是未定义的，所以设备树插件应该加上“/plugin/”。
+
+        第6行： 指定设备树插件的加载位置，默认我们加载到根节点下，既“target-path =“/”,或者使用target = <&XXXXX>，增加节点或者属性到某个节点下。
+
+        第7-8行： 我们要插入的设备及节点或者要引用(追加)的设备树节点放在__overlay__ {…}内，你可以增加、修改或者覆盖主设备树的节点。
+
 dtc -@ -I dts -O dtb -o sun55i-t527-test.dtbo sun55i-t527-test.dts
 
 dts：Device TreeSource
