@@ -174,7 +174,7 @@ static int bmi160_remove(struct i2c_client *client)
     return 0;
 }
 
-/*定义ID 匹配表*/
+/*定义ID匹配表*/
 static const struct i2c_device_id gtp_device_id[] = {{"barco,i2c_bmi160", 0}, {}};
 
 /*定义设备树匹配表*/
@@ -199,7 +199,7 @@ static int __init bmi160_driver_init(void)
 {
     int ret;
 
-    pr_info("bmi160_driver_init\n");
+    printk(KERN_EMERG   "bmi160_driver_init\n");
     ret = i2c_add_driver(&bmi160_driver);
     return ret;
 }
@@ -208,7 +208,7 @@ module_init(bmi160_driver_init);
 /** 驱动注销 */
 static void __exit bmi160_driver_exit(void)
 {
-    pr_info("bmi160_driver_exit\n");
+    printk(KERN_EMERG  "bmi160_driver_exit\n");
     i2c_del_driver(&bmi160_driver);
 }
 module_exit(bmi160_driver_exit);

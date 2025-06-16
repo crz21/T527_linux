@@ -15,6 +15,7 @@ export CC OBJS_DIR PWD
 all:
 	make -C $(KDIR) M=$(PWD) modules CROSS_COMPILE=""
 	gcc -o main main.c
+	dtc -@ -I dts -O dtb -o sun55i-t527-test.dtbo sun55i-t527-test.dts 
 
 # $(SUBDIRS):ECHO
 # 	make -C $@
