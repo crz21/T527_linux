@@ -14,6 +14,7 @@ export CC OBJS_DIR PWD
 # all:$(SUBDIRS) $(CUR_OBJS) DEBUG
 all:
 	make -C $(KDIR) M=$(PWD) modules CROSS_COMPILE=""
+	gcc -o main main.c
 
 # $(SUBDIRS):ECHO
 # 	make -C $@
@@ -29,5 +30,5 @@ all:
 
 .PHONE:clean
 clean:
-	rm -rf *.o *.cmd *.ko *.mod.c *.tmp_versions *.order *.symvers .i2c_bmi160.* *.mod .Module.* .modules.*
+	rm -rf *.o *.cmd *.ko *.mod.c *.tmp_versions *.order *.symvers .i2c_bmi160.* *.mod .Module.* .modules.* main *.dtbo 
 		

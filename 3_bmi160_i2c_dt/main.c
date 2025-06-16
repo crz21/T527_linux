@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     int error;
     int fd = open(DEV_OPERATION, O_RDWR);
     if (fd < 0) {
-        printf("open file : %s failed !\n", argv[0]);
+        printf("open file : %s failed, fd = %d !\n", argv[0], fd);
         return -1;
     }
     error = read(fd, &id_buf, 1);

@@ -30,30 +30,30 @@ struct device_node *bmi160_device_node;  // 设备树节点结构体
 /*------------------IIC设备内容----------------------*/
 struct i2c_client *bmi160_client = NULL;  // 保存bmi160设备对应的i2c_client结构体，匹配成功后由.prob函数带回。
 
-// static int i2c_write_bmi160(struct i2c_client *bmi160_client, uint8_t address, uint8_t data)
-// {
-//     int error = 0;
-//     uint8_t write_data[2];
-//     struct i2c_msg send_msg;  // 要发送的数据结构体
+static int i2c_write_bmi160(struct i2c_client *bmi160_client, uint8_t address, uint8_t data)
+{
+    int error = 0;
+    uint8_t write_data[2];
+    struct i2c_msg send_msg;  // 要发送的数据结构体
 
-//     /*设置要发送的数据*/
-//     write_data[0] = address;
-//     write_data[1] = data;
+    /*设置要发送的数据*/
+    write_data[0] = address;
+    write_data[1] = data;
 
-//     /*发送 iic要写入的地址 reg*/
-//     send_msg.addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
-//     send_msg.flags = 0;                   // 标记为发送数据
-//     send_msg.buf = write_data;            // 写入的首地址
-//     send_msg.len = 2;                     // reg长度
+    /*发送 iic要写入的地址 reg*/
+    send_msg.addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
+    send_msg.flags = 0;                   // 标记为发送数据
+    send_msg.buf = write_data;            // 写入的首地址
+    send_msg.len = 2;                     // reg长度
 
-//     /*执行发送*/
-//     error = i2c_transfer(bmi160_client->adapter, &send_msg, 1);
-//     if (error != 1) {
-//         printk(KERN_DEBUG "\n i2c_transfer error \n");
-//         return -1;
-//     }
-//     return 0;
-// }
+    /*执行发送*/
+    error = i2c_transfer(bmi160_client->adapter, &send_msg, 1);
+    if (error != 1) {
+        printk(KERN_DEBUG "\n i2c_transfer error \n");
+        return -1;
+    }
+    return 0;
+}
 
 static int i2c_read_bmi160(struct i2c_client *bmi160_client, uint8_t address, void *data, uint32_t length)
 {
@@ -199,13 +199,18 @@ static int __init bmi160_driver_init(void)
 {
     int ret;
 
+    pr_info("bmi160_driver_init\n");
     ret = i2c_add_driver(&bmi160_driver);
     return ret;
 }
 module_init(bmi160_driver_init);
 
 /** 驱动注销 */
-static void __exit bmi160_driver_exit(void) { i2c_del_driver(&bmi160_driver); }
+static void __exit bmi160_driver_exit(void)
+{
+    pr_info("bmi160_driver_exit\n");
+    i2c_del_driver(&bmi160_driver);
+}
 module_exit(bmi160_driver_exit);
 
 MODULE_LICENSE("GPL");

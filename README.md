@@ -141,3 +141,4 @@ cmake ..        &&                                make
 11、加载命令行
         sudo insmod i2c_bmi160.ko
 
+![alt text](i2c000.png)
