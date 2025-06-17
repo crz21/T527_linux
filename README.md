@@ -14,6 +14,9 @@ cmake ..        &&                                make
 
 二、MAKEFILE
 
+1、可用$(CURDIR) 和 PWD=$(shell pwd) $(PWD)表示当前路径
+
+
 
 
 三、DEVICETREE
@@ -140,5 +143,10 @@ cmake ..        &&                                make
 
 11、加载命令行
         sudo insmod i2c_bmi160.ko
+
+12、在内核源码中编译设备树
+        make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- npi_v7_defconfig
+
+        make ARCH=arm -j4 CROSS_COMPILE=arm-linux-gnueabihf- dtbs
 
 ![alt text](i2c000.png)

@@ -1,5 +1,5 @@
 KDIR := /lib/modules/`uname -r`/build 
-CC=gcc
+
 # INCLUDE_DIR=-I./device
 # SUBDIRS=$(shell ls -l | grep ^d | awk '{if($$9 != "debug") printf $$9}')
 OBJS_DIR=debug/obj
@@ -9,12 +9,18 @@ PWD=$(shell pwd)
 # BIN=tesp_i2c
 # CUR_SOURCE=${wildcard *.c}
 # CUR_OBJS=${patsubst %.c, %.o, $(CUR_SOURCE)}
-export CC OBJS_DIR PWD
+# ARCH=arm
+# CROSS_COMPILE=arm-linux-gnueabihf-
+# export ARCH CROSS_COMPILE
+# source file.
+app_in=main.c
+# executable file.
+app_out=main
 
 # all:$(SUBDIRS) $(CUR_OBJS) DEBUG
 all:
-	make -C $(KDIR) M=$(PWD) modules CROSS_COMPILE=""
-	gcc -o main main.c
+	make -C $(KDIR) M=$(PWD) modules CROSS_COMPILE=''
+	$(CROSS_COMPILE)gcc -o $(app_out) $(app_in)
 	dtc -@ -I dts -O dtb -o sun55i-t527-test.dtbo sun55i-t527-test.dts 
 
 # $(SUBDIRS):ECHO

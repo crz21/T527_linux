@@ -90,7 +90,8 @@ static int bmi160_init(void)
         /*初始化错误*/
         printk(KERN_DEBUG "\n bmi160_init error \n");
         return -1;
-    }
+    } else
+        printk(KERN_DEBUG "\n bmi160_init ok ! \n");
     return 0;
 }
 
@@ -167,6 +168,7 @@ alloc_err:
 static int bmi160_remove(struct i2c_client *client)
 {
     /** 删除设备 */
+    printk(KERN_EMERG "\t  remove device!  \n");
     device_destroy(class_bmi160, bmi160_devno);       // 清除设备
     class_destroy(class_bmi160);                      // 清除类
     cdev_del(&bmi160_chr_dev);                        // 清除设备号
@@ -199,8 +201,9 @@ static int __init bmi160_driver_init(void)
 {
     int ret;
 
-    printk(KERN_EMERG   "bmi160_driver_init\n");
+    printk(KERN_EMERG "bmi160_driver_init\n");
     ret = i2c_add_driver(&bmi160_driver);
+    printk(KERN_EMERG "ret = %d\n", ret);
     return ret;
 }
 module_init(bmi160_driver_init);
@@ -208,7 +211,7 @@ module_init(bmi160_driver_init);
 /** 驱动注销 */
 static void __exit bmi160_driver_exit(void)
 {
-    printk(KERN_EMERG  "bmi160_driver_exit\n");
+    printk(KERN_EMERG "bmi160_driver_exit\n");
     i2c_del_driver(&bmi160_driver);
 }
 module_exit(bmi160_driver_exit);

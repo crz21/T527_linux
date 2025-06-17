@@ -2,14 +2,13 @@
 /plugin/;
 
 / {
+	compatible = "allwinner,sun55i-t527";
 	fragment@0 {
 		target = <&twi1>;
 		__overlay__ {
             #address-cells = <1>;
             #size-cells = <0>;
 			status = "okay";
-			// pinctrl-names = "default";
-			// pinctrl-0 = <&pinctrl_twi1>;
 			bmi160@69{
 				compatible = "barco,bmi160";
 				clock-frequency = <100000>;
