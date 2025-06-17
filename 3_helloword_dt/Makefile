@@ -1,14 +1,11 @@
-# Point to Linux Kernel Headers
-KDIR=/lib/modules/`uname -r`/build 
-PWD=$(shell pwd)
-# ARCH=arm
-# CROSS_COMPILE=arm-linux-gnueabihf-
-# export ARCH CROSS_COMPILE
+KDIR:=/lib/modules/`uname -r`/build # Point to Linux Kernel Headers
+PWD:=$(shell pwd)
 
 obj-m:=helloword.o
 
-all:
-	$(MAKE) -C $(KDIR) M=$(CURDIR) modules CROSS_COMPILE=''
-.PHONE:clean
+default:
+	make -C $(KDIR) M=$(PWD) modules CROSS_COMPILE=""
+	dtc -@ -I dts -O dtb -o sun55i-t527-helloword.dtbo sun55i-t527-helloword.dts
+
 clean:
-	rm -rf *.o *.cmd *.ko *.mod.c *.tmp_versions *.order *.symvers
+	rm -rf *.o *.cmd *.ko *.mod.c *.tmp_versions *.order *.symvers *.dtbo
