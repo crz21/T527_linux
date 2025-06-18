@@ -21,8 +21,7 @@ app_out=main
 all:
 	make -C $(KDIR) M=$(PWD) modules CROSS_COMPILE=''
 	$(CROSS_COMPILE)gcc -o $(app_out) $(app_in)
-	dtc -@ -I dts -O dtb -o sun55i-t527-test.dtbo sun55i-t527-test.dts 
-	dtc -@ -I dts -O dtb -o sun55i-t527-test2.dtbo sun55i-t527-test2.dts 
+	dtc -@ -I dts -O dtb -o sun55i-t527-bmi160.dtbo sun55i-t527-bmi160.dts 
 
 # $(SUBDIRS):ECHO
 # 	make -C $@

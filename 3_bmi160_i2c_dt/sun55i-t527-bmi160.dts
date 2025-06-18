@@ -1,0 +1,101 @@
+/dts-v1/;
+/plugin/;
+
+// / {
+// 	fragment@0 {
+// 		target = <&pio>;
+// 		__overlay__ {
+// 			bmi160_pins_default: twi1@0 {
+// 				pins = "PB4", "PB5";
+// 				function = "twi1";
+// 				drive-strength = <10>;
+// 				bias-pull-up;
+// 			};
+// 		};
+// 	};
+
+// 	fragment@1 {
+// 		// target = <&twi1>;
+// 		target-path = "/";
+// 		__overlay__ {
+// 			#address-cells = <1>;
+// 			#size-cells = <0>;
+// 			pinctrl-0 = <&bmi160_pins_default>;
+// 			pinctrl-names = "default";
+// 			clock-frequency = <400000>;
+// 			status = "okay";
+// 			bmi160@69 {
+// 				compatible = "barco,i2c_bmi160";
+// 				twi_drv_used = <1>;
+// 				reg = <69>;
+// 				status = "okay";
+// 			};
+// 		};
+// 	};
+// };
+
+// / {
+// 	fragment@0 {
+// 		target = <&pio>;
+// 		__overlay__ {
+// 			bmi160_pins_default: twi1@0 {
+// 				pins = "PB4", "PB5";
+// 				function = "twi1";
+// 				drive-strength = <10>;
+// 				bias-pull-up;
+// 			};
+// 		};
+// 	};
+// 	fragment@1 {
+// 		target-path = "/";
+// 		__overlay__ {
+// 		bmi160{
+// 				pinctrl-0 = <&bmi160_pins_default>;
+// 				pinctrl-names = "default";
+// 				clock-frequency = <400000>;
+// 				#address-cells = <1>;
+// 				#size-cells = <0>;
+// 				compatible = "barco,bmi160";
+// 				twi_drv_used = <1>;
+// 				status = "okay";
+// 				bmi160_i2c@69 {
+// 					compatible = "barco,bmi160_i2c";
+// 					reg = <69>;
+// 					status = "okay";
+// 				};
+// 			};
+// 		};
+// 	};
+// };
+/** 反面例子。。。。 */
+// / {
+// 	fragment@0 {
+// 		target = <&pio>;
+// 		__overlay__ {
+// 			bmi160_pins_default: twi1@0 {
+// 				pins = "PB4", "PB5";
+// 				function = "twi1";
+// 				drive-strength = <10>;
+// 				bias-pull-up;
+// 			};
+// 		};
+// 	};
+
+// 	fragment@1 {
+// 		target-path = "/";
+// 		__overlay__ {
+// 		#address-cells = <1>;
+// 		#size-cells = <0>;
+// 		status = "okay";
+// 		bmi160_i2c@69 {
+// 				compatible = "barco,bmi160_i2c";
+// 				pinctrl-0 = <&bmi160_pins_default>;
+// 				pinctrl-names = "default";
+// 				clock-frequency = <400000>;
+// 				twi_drv_used = <1>;
+// 				reg = <69>;
+// 				status = "okay";
+// 			};
+// 		};
+// 	};
+// };
