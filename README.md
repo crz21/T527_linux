@@ -18,6 +18,9 @@ cmake ..          &&                                make
 
 2、obj-m表示把文件test.o作为"模块"进行编译，不会编译到内核，但是会生成一个独立的 "test.ko" 文件；obj-y表示把test.o文件编译进内核;
 
+3、uname -r：表示当前linux版本号
+
+4、.PHONE：伪指令
 
 三、DEVICETREE
 
