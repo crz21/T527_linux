@@ -40,8 +40,8 @@ static int i2c_write_bmi160(struct i2c_client *bmi160_client, uint8_t *data, uin
     /*发送 iic要写入的地址 reg*/
     send_msg.addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
     send_msg.flags = 0;                   // 标记为发送数据
-    send_msg.buf = data;            // 写入的首地址
-    send_msg.len = length;            // reg长度
+    send_msg.buf = data;                  // 写入的首地址
+    send_msg.len = length;                // reg长度
 
     /*执行发送*/
     // error = i2c_transfer(bmi160_client->adapter, &send_msg, 1);
@@ -67,8 +67,8 @@ static int i2c_read_bmi160(struct i2c_client *bmi160_client, uint8_t *data, uint
     /*设置读取位置msg*/
     bmi160_msg[1].addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
     bmi160_msg[1].flags = I2C_M_RD;            // 标记为读取数据
-    bmi160_msg[1].buf = data + 1;                  // 读取得到的数据保存位置
-    bmi160_msg[1].len = length;            // 读取长度
+    bmi160_msg[1].buf = data + 1;              // 读取得到的数据保存位置
+    bmi160_msg[1].len = length;                // 读取长度
 
     // error = i2c_transfer(bmi160_client->adapter, bmi160_msg, 2);
 
@@ -82,12 +82,14 @@ static int i2c_read_bmi160(struct i2c_client *bmi160_client, uint8_t *data, uint
 /** 字符设备操作函数集，read */
 ssize_t bmi160_read(struct file *filp, char __user *buf, size_t len, loff_t *off)
 {
-    i2c_read_bmi160(bmi160_client,  buf, len);
+    len -= 1;
+    i2c_read_bmi160(bmi160_client, buf, len);
     return 0;
 }
 
 ssize_t bmi160_write(struct file *filp, const char __user *buf, size_t len, loff_t *off)
 {
+    len -= 1;
     i2c_write_bmi160(bmi160_client, buf, len);
     return 0;
 }

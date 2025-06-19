@@ -72,7 +72,7 @@ int8_t bmi160_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t l
 
     tx_buf[0] = reg_addr;
     for (i = 0; i < len; i++) tx_buf[i + 1] = data[i];
-    res = read(fd, tx_buf, len);
+    res = read(fd, tx_buf, len + 1);
     printf("bmi160 read data\n");
     if (res < 1) pabort("can't send message");
     return 0;
@@ -85,7 +85,7 @@ int8_t bmi160_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t 
 
     tx_buf[0] = reg_addr;
     for (i = 0; i < len; i++) tx_buf[i + 1] = data[i];
-    res = write(fd, tx_buf, len);
+    res = write(fd, tx_buf, len + 1);
     printf("bmi160 write data\n");
     if (res < 1) pabort("can't send message");
     return 0;
