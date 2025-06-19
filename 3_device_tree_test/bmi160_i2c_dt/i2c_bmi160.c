@@ -17,6 +17,8 @@
 #include <linux/types.h>
 #include <linux/uaccess.h>
 
+#include "bmi160_defs.h"
+
 #define DEV_NAME "I2C1_BMI160"
 #define DEV_CNT (1)
 
@@ -30,35 +32,31 @@ struct device_node *bmi160_device_node;  // 设备树节点结构体
 /*------------------IIC设备内容----------------------*/
 struct i2c_client *bmi160_client = NULL;  // 保存bmi160设备对应的i2c_client结构体，匹配成功后由.prob函数带回。
 
-static int i2c_write_bmi160(struct i2c_client *bmi160_client, uint8_t address, uint8_t data)
+static int i2c_write_bmi160(struct i2c_client *bmi160_client, uint8_t *data, uint32_t length)
 {
     int error = 0;
-    uint8_t write_data[2];
     struct i2c_msg send_msg;  // 要发送的数据结构体
-
-    /*设置要发送的数据*/
-    write_data[0] = address;
-    write_data[1] = data;
 
     /*发送 iic要写入的地址 reg*/
     send_msg.addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
     send_msg.flags = 0;                   // 标记为发送数据
-    send_msg.buf = write_data;            // 写入的首地址
-    send_msg.len = 2;                     // reg长度
+    send_msg.buf = data;            // 写入的首地址
+    send_msg.len = length;            // reg长度
 
     /*执行发送*/
-    error = i2c_transfer(bmi160_client->adapter, &send_msg, 1);
+    // error = i2c_transfer(bmi160_client->adapter, &send_msg, 1);
+
     if (error != 1) {
-        printk(KERN_DEBUG "\n i2c_transfer error \n");
+        printk(KERN_DEBUG "\n i2c_write_bmi160 error \n");
         return -1;
     }
     return 0;
 }
 
-static int i2c_read_bmi160(struct i2c_client *bmi160_client, uint8_t address, void *data, uint32_t length)
+static int i2c_read_bmi160(struct i2c_client *bmi160_client, uint8_t *data, uint32_t length)
 {
     int error = 0;
-    uint8_t address_data = address;
+    uint8_t address_data = data[0];
     struct i2c_msg bmi160_msg[2];
     /*设置读取位置msg*/
     bmi160_msg[0].addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
@@ -69,15 +67,28 @@ static int i2c_read_bmi160(struct i2c_client *bmi160_client, uint8_t address, vo
     /*设置读取位置msg*/
     bmi160_msg[1].addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
     bmi160_msg[1].flags = I2C_M_RD;            // 标记为读取数据
-    bmi160_msg[1].buf = data;                  // 读取得到的数据保存位置
-    bmi160_msg[1].len = length;                // 读取长度
+    bmi160_msg[1].buf = data + 1;                  // 读取得到的数据保存位置
+    bmi160_msg[1].len = length;            // 读取长度
 
-    error = i2c_transfer(bmi160_client->adapter, bmi160_msg, 2);
+    // error = i2c_transfer(bmi160_client->adapter, bmi160_msg, 2);
 
     if (error != 2) {
-        printk(KERN_DEBUG "\n i2c_read_bmi160 error \n");
+        printk(KERN_DEBUG "\n i2c_read_bmi160 error\n");
         return -1;
     }
+    return 0;
+}
+
+/** 字符设备操作函数集，read */
+ssize_t bmi160_read(struct file *filp, char __user *buf, size_t len, loff_t *off)
+{
+    i2c_read_bmi160(bmi160_client,  buf, len);
+    return 0;
+}
+
+ssize_t bmi160_write(struct file *filp, const char __user *buf, size_t len, loff_t *off)
+{
+    i2c_write_bmi160(bmi160_client, buf, len);
     return 0;
 }
 
@@ -106,19 +117,13 @@ static int bmi160_open(struct inode *inode, struct file *filp)
 /** 字符设备操作函数集，release */
 static int bmi160_release(struct inode *inode, struct file *filp) { return 0; }
 
-/** 字符设备操作函数集，read */
-ssize_t bmi160_read(struct file *filp, char __user *buf, size_t len, loff_t *off)
-{
-    i2c_read_bmi160(bmi160_client, BMI160_CHIP_ID_ADDR, buf, 1);
-    return 0;
-}
-
 /** 字符设备操作函数集，结构体 */
 static struct file_operations bmi160_chr_dev_fops = {
     .owner = THIS_MODULE,
     .open = bmi160_open,
     .release = bmi160_release,
     .read = bmi160_read,
+    .write = bmi160_write,
 };
 /** 字符设备操作函数集 end */
 

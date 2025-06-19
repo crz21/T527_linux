@@ -1,16 +1,17 @@
 KDIR:=/lib/modules/`uname -r`/build 
+INCLUDE_DIR=-I..
 OBJS_DIR=debug/obj
 obj-m:=i2c_bmi160.o
 PWD=$(shell pwd)
 
 # source file.
-app_in=main.c
+app_in=bmi160_user.c bmi160.c
 # executable file.
 app_out=main
 
 all:
 	make -C $(KDIR) M=$(PWD) modules CROSS_COMPILE=''
-	$(CROSS_COMPILE)gcc -o $(app_out) $(app_in)
+	$(CROSS_COMPILE)gcc $(INCLUDE_DIR) -o $(app_out) $(app_in) -lm -lc
 	dtc -@ -I dts -O dtb -o sun55i-t527-bmi160.dtbo sun55i-t527-bmi160.dts 
 
 .PHONE:clean
