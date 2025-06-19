@@ -28,7 +28,7 @@ Linux驱动的一些学习记录（linux中一切皆文件！！！）
 - 构建file_operation结构体内容，实现硬件各个相关的操作
 - struct xxx_driver  定义xxx总线设备结构体，如果配对上，则会调用xxx_driver.probe函数
 - struct of_device_id  该结构体用于与设备树匹配
-- struct i2c_device_id  将device和driver的id关联时用
+- struct i2c_device_id  将device和driver的id关联时用，并可以通过结构体第二个参数确定哪个设备使用该驱动
 - THIS_MODULE  #define THIS_MODULE (&__this_module)  为下面的结构体
 
         struct module {
