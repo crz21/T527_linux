@@ -2,8 +2,8 @@
 /plugin/;
 
 / {
+    compatible = "allwinner,sun55i-t527";
 	fragment@0 {
-        compatible = "allwinner,sun55i-t527";
 		target = <&twi1>;
 		__overlay__ {
 			#address-cells = <1>;
@@ -13,7 +13,7 @@
 			clock-frequency = <400000>;
 			status = "okay";
 			bmi160@69 {
-				compatible = "barco,i2c_bmi160";
+				compatible = "barco,bmi160";
 				twi_drv_used = <1>;
 				reg = <69>;
 				status = "okay";

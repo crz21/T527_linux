@@ -177,10 +177,10 @@ static int bmi160_remove(struct i2c_client *client)
 }
 
 /*定义ID匹配表*/
-static const struct i2c_device_id gtp_device_id[] = {{"barco,bmi160_i2c", 0}, {}};
+static const struct i2c_device_id gtp_device_id[] = {{"barco,bmi160", 0}, {}};
 
 /*定义设备树匹配表*/
-static const struct of_device_id bmi160_of_match_table[] = {{.compatible = "barco,bmi160_i2c"}, {/* sentinel */}};
+static const struct of_device_id bmi160_of_match_table[] = {{.compatible = "barco,bmi160"}, {/* sentinel */}};
 
 /*定义i2c总线设备结构体*/
 struct i2c_driver bmi160_driver = {
@@ -189,7 +189,7 @@ struct i2c_driver bmi160_driver = {
     .id_table = gtp_device_id,
     .driver =
         {
-            .name = "barco,bmi160_i2c",
+            .name = "barco,bmi160",
             .owner = THIS_MODULE,
             .of_match_table = bmi160_of_match_table,
         },
