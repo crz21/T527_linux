@@ -23,6 +23,7 @@ cmake ..          &&                                make
 三、DEVICETREE
 
 1、文件名
+
         dts：Device TreeSource
         dtc：DeviceTree Compiler
         dtb：DeviceTree Blob
