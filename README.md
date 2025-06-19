@@ -1,4 +1,4 @@
-Linux驱动的一些学习记录
+Linux驱动的一些学习记录（linux中一切皆文件！！！）
 
 一、CMAKE
 
@@ -13,36 +13,41 @@ cmake ..          &&                                make
 
 
 二、MAKEFILE
+- $(CURDIR)：CURDIR是make的内嵌变量，为当前目录；$(PWD)表示当前路径；
+- obj-m表示把文件test.o作为"模块"进行编译，不会编译到内核，但是会生成一个独立的 "test.ko" 文件；obj-y表示把test.o文件编译进内核;
+- uname -r：表示当前linux版本号
+- .PHONE：伪指令
+- CROSS_COMPILE=''：交叉编译链按本地来
 
-1、$(CURDIR)：CURDIR是make的内嵌变量，为当前目录；$(PWD)表示当前路径；
 
-2、obj-m表示把文件test.o作为"模块"进行编译，不会编译到内核，但是会生成一个独立的 "test.ko" 文件；obj-y表示把test.o文件编译进内核;
 
-3、uname -r：表示当前linux版本号
-
-4、.PHONE：伪指令
 
 三、DEVICETREE
 
-1、文件名
+文件名
 
         dts：Device TreeSource
         dtc：DeviceTree Compiler
         dtb：DeviceTree Blob
         dtbo：Device Tree Blob Overlay
 
-2、实现入口函数xxx_init()和卸载函数xxx_exit()
+- 实现入口函数xxx_init()和卸载函数xxx_exit()
 
-3、申请设备号 register_chrdev_region()
+- 构建file_operation结构体内容，实现硬件各个相关的操作
+- struct xxx_driver  定义xxx总线设备结构体，如果配对上，则会调用xxx_driver.probe函数
+- struct of_device_id  该结构体用于与设备树匹配
+- struct i2c_device_id  将device和driver的id关联时用
+- THIS_MODULE
+- 申请设备号 register_chrdev_region()
+- 动态方式分配设备号 alloc_chrdev_region()  注销设备号 unregister_chrdev_region()
+- 初始化字符设备，cdev_init函数、cdev_add函数  cdev_del()  清除设备号
+- 创建设备类 class_create()  清除设备类class_destroy()
+- 将设备类和设备号和设备名关联 device_create()  清除设备信息  device_destroy()
 
-4、初始化字符设备，cdev_init函数、cdev_add函数
-
-5、构建file_operation结构体内容，实现硬件各个相关的操作
-
-6、在终端上使用mknod根据设备号来进行创建设备文件(节点)
+12、在终端上使用mknod根据设备号来进行创建设备文件(节点)
 (也可以在驱动使用class_create创建设备类、在类的下面device_create创建设备节点)
 
-7、设备树中属性的意义
+13、设备树中属性的意义
 
         a、compatible：设备节点中对应的节点信息已经被内核构造成struct platform_device。
         驱动可以通过相应的函数从中提取信息。compatible属性是用来查找节点的方法之一，另外还可以通过节点名或节点路径查找指定节点。
