@@ -7,27 +7,36 @@ Linux驱动的一些学习记录
 2、cmake .&&make
 
 3、一步生成方式
-cmake ..        &&                                make
+cmake ..          &&                                make
       当前文件夹  当前面条件为是的情况下后面条件生成
 
 
 
 二、MAKEFILE
 
-1、可用$(CURDIR) 和 PWD=$(shell pwd) $(PWD)表示当前路径
+1、$(CURDIR)：CURDIR是make的内嵌变量，为当前目录
+   $(PWD)表示当前路径
+
+2、obj-m表示把文件test.o作为"模块"进行编译，不会编译到内核，但是会生成一个独立的 "test.ko" 文件；
+
+   obj-y表示把test.o文件编译进内核;
 
 
 
 
 三、DEVICETREE
 
-1、实现入口函数xxx_init()和卸载函数xxx_exit()
+1、文件名
+        dts：Device TreeSource
+        dtc：DeviceTree Compiler
+        dtb：DeviceTree Blob
+        dtbo：Device Tree Blob Overlay
 
-2、申请设备号 register_chrdev_region()
+2、实现入口函数xxx_init()和卸载函数xxx_exit()
 
-3、初始化字符设备，cdev_init函数、cdev_add函数
+3、申请设备号 register_chrdev_region()
 
-4、硬件初始化，如时钟寄存器配置使能，GPIO设置为输入输出模式等。
+4、初始化字符设备，cdev_init函数、cdev_add函数
 
 5、构建file_operation结构体内容，实现硬件各个相关的操作
 
@@ -109,11 +118,7 @@ cmake ..        &&                                make
 
 10、命令行
 
-文件名
-        dts：Device TreeSource
-        dtc：DeviceTree Compiler
-        dtb：DeviceTree Blob
-        dtbo：Device Tree Blob Overlay
+
 
 命令行
         dtc -@ -I dts -O dtb -o sun55i-t527-test.dtbo sun55i-t527-test.dts
