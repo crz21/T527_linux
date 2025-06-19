@@ -1,30 +1,23 @@
 Linux驱动的一些学习记录（linux中一切皆文件！！！）
 
 一、CMAKE
-
-1、cmake -S {源文件目录} -B {过程文件所需保存的目录}
-
-2、cmake .&&make
-
-3、一步生成方式
-cmake ..          &&                                make
-      当前文件夹  当前面条件为是的情况下后面条件生成
-
+- cmake -S {源文件目录} -B {过程文件所需保存的目录}
+- cmake .&&make
+- 一步生成方式
+        cmake ..          &&                                make
+        当前文件夹  当前面条件为是的情况下后面条件生成
 
 
 二、MAKEFILE
-- $(CURDIR)：CURDIR是make的内嵌变量，为当前目录；$(PWD)表示当前路径；
+- $(CURDIR)CURDIR是make的内嵌变量，为当前目录；$(PWD)表示当前路径；
 - obj-m表示把文件test.o作为"模块"进行编译，不会编译到内核，但是会生成一个独立的 "test.ko" 文件；obj-y表示把test.o文件编译进内核;
-- uname -r：表示当前linux版本号
-- .PHONE：伪指令
-- CROSS_COMPILE=''：交叉编译链按本地来
-
-
+- uname -r  表示当前linux版本号
+- .PHONE  伪指令
+- CROSS_COMPILE=''  交叉编译链按本地来
 
 
 三、DEVICETREE
-
-文件名
+- 文件名
 
         dts：Device TreeSource
         dtc：DeviceTree Compiler
@@ -32,7 +25,6 @@ cmake ..          &&                                make
         dtbo：Device Tree Blob Overlay
 
 - 实现入口函数xxx_init()和卸载函数xxx_exit()
-
 - 构建file_operation结构体内容，实现硬件各个相关的操作
 - struct xxx_driver  定义xxx总线设备结构体，如果配对上，则会调用xxx_driver.probe函数
 - struct of_device_id  该结构体用于与设备树匹配
@@ -44,10 +36,10 @@ cmake ..          &&                                make
 - 创建设备类 class_create()  清除设备类class_destroy()
 - 将设备类和设备号和设备名关联 device_create()  清除设备信息  device_destroy()
 
-12、在终端上使用mknod根据设备号来进行创建设备文件(节点)
+- 在终端上使用mknod根据设备号来进行创建设备文件(节点)
 (也可以在驱动使用class_create创建设备类、在类的下面device_create创建设备节点)
 
-13、设备树中属性的意义
+- 设备树中属性的意义
 
         a、compatible：设备节点中对应的节点信息已经被内核构造成struct platform_device。
         驱动可以通过相应的函数从中提取信息。compatible属性是用来查找节点的方法之一，另外还可以通过节点名或节点路径查找指定节点。
@@ -70,9 +62,8 @@ cmake ..          &&                                make
 
         f、ranges：属性值类型：任意数量的 <子地址、父地址、地址长度>编码。
 
-8、节点aliases：别名
- 
-9、设备树插件格式
+        g、节点aliases：别名
+- 设备树插件格式
 
  格式一
 
@@ -120,11 +111,8 @@ cmake ..          &&                                make
         /*此处在节点"XXXXX"下,添加要插入的节点或者属性*/
         };
 
-10、命令行
+- 命令行
 
-
-
-命令行
         dtc -@ -I dts -O dtb -o sun55i-t527-test.dtbo sun55i-t527-test.dts
 
 
@@ -152,18 +140,11 @@ cmake ..          &&                                make
         -o, --out <arg>
                 Output file
 
-11、加载命令行
+- 加载命令行
         sudo insmod i2c_bmi160.ko
 
-12、在内核源码中编译设备树
+- 在内核源码中编译设备树
         make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- npi_v7_defconfig
         make ARCH=arm -j4 CROSS_COMPILE=arm-linux-gnueabihf- dtbs
 
-
-
-![alt text](i2c000.png)
-
-
 四、shell脚本
-
-1、
