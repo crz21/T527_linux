@@ -44,7 +44,7 @@ static int i2c_write_bmi160(struct i2c_client *bmi160_client, uint8_t *data, uin
     send_msg.len = length;                // reg长度
 
     /*执行发送*/
-    // error = i2c_transfer(bmi160_client->adapter, &send_msg, 1);
+    error = i2c_transfer(bmi160_client->adapter, &send_msg, 1);
 
     if (error != 1) {
         printk(KERN_DEBUG "\n i2c_write_bmi160 error \n");
@@ -70,7 +70,7 @@ static int i2c_read_bmi160(struct i2c_client *bmi160_client, uint8_t *data, uint
     bmi160_msg[1].buf = data + 1;              // 读取得到的数据保存位置
     bmi160_msg[1].len = length;                // 读取长度
 
-    // error = i2c_transfer(bmi160_client->adapter, bmi160_msg, 2);
+    error = i2c_transfer(bmi160_client->adapter, bmi160_msg, 2);
 
     if (error != 2) {
         printk(KERN_DEBUG "\n i2c_read_bmi160 error\n");
