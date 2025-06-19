@@ -67,6 +67,7 @@ cmake ..        &&                                make
         /plugin/;
 
         / {
+                compatible = "allwinner,sun55i-t527";/** 设备主控信息，用于匹配 */
                 fragment@0 {
                 target-path = "/";
                 __overlay__ {
@@ -80,6 +81,7 @@ cmake ..        &&                                make
                 __overlay__ {
                         /*在此添加要插入的节点*/
                         .......
+                        compatible = "barco,bmi160";/** 插件信息，用于匹配 */
                 };
                 };
         .......
@@ -146,7 +148,8 @@ cmake ..        &&                                make
 
 12、在内核源码中编译设备树
         make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- npi_v7_defconfig
-
         make ARCH=arm -j4 CROSS_COMPILE=arm-linux-gnueabihf- dtbs
+
+
 
 ![alt text](i2c000.png)
