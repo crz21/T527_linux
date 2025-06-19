@@ -29,7 +29,194 @@ Linux驱动的一些学习记录（linux中一切皆文件！！！）
 - struct xxx_driver  定义xxx总线设备结构体，如果配对上，则会调用xxx_driver.probe函数
 - struct of_device_id  该结构体用于与设备树匹配
 - struct i2c_device_id  将device和driver的id关联时用
-- THIS_MODULE
+- THIS_MODULE  #define THIS_MODULE (&__this_module)  为下面的结构体
+
+        struct module {
+                enum module_state state;
+
+                /* Member of list of modules */
+                struct list_head list;
+
+                /* Unique handle for this module */
+                char name[MODULE_NAME_LEN];
+
+        #ifdef CONFIG_STACKTRACE_BUILD_ID
+                /* Module build ID */
+                unsigned char build_id[BUILD_ID_SIZE_MAX];
+        #endif
+
+                /* Sysfs stuff. */
+                struct module_kobject mkobj;
+                struct module_attribute *modinfo_attrs;
+                const char *version;
+                const char *srcversion;
+                struct kobject *holders_dir;
+
+                /* Exported symbols */
+                const struct kernel_symbol *syms;
+                const s32 *crcs;
+                unsigned int num_syms;
+
+        #ifdef CONFIG_ARCH_USES_CFI_TRAPS
+                s32 *kcfi_traps;
+                s32 *kcfi_traps_end;
+        #endif
+
+                /* Kernel parameters. */
+        #ifdef CONFIG_SYSFS
+                struct mutex param_lock;
+        #endif
+                struct kernel_param *kp;
+                unsigned int num_kp;
+
+                /* GPL-only exported symbols. */
+                unsigned int num_gpl_syms;
+                const struct kernel_symbol *gpl_syms;
+                const s32 *gpl_crcs;
+                bool using_gplonly_symbols;
+
+        #ifdef CONFIG_MODULE_SIG
+                /* Signature was verified. */
+                bool sig_ok;
+        #endif
+
+                bool async_probe_requested;
+
+                /* Exception table */
+                unsigned int num_exentries;
+                struct exception_table_entry *extable;
+
+                /* Startup function. */
+                int (*init)(void);
+
+                struct module_memory mem[MOD_MEM_NUM_TYPES] __module_memory_align;
+
+                /* Arch-specific module values */
+                struct mod_arch_specific arch;
+
+                unsigned long taints;	/* same bits as kernel:taint_flags */
+
+        #ifdef CONFIG_GENERIC_BUG
+                /* Support for BUG */
+                unsigned num_bugs;
+                struct list_head bug_list;
+                struct bug_entry *bug_table;
+        #endif
+
+        #ifdef CONFIG_KALLSYMS
+                /* Protected by RCU and/or module_mutex: use rcu_dereference() */
+                struct mod_kallsyms __rcu *kallsyms;
+                struct mod_kallsyms core_kallsyms;
+
+                /* Section attributes */
+                struct module_sect_attrs *sect_attrs;
+
+                /* Notes attributes */
+                struct module_notes_attrs *notes_attrs;
+        #endif
+
+                /* The command line arguments (may be mangled).  People like
+                keeping pointers to this stuff */
+                char *args;
+
+        #ifdef CONFIG_SMP
+                /* Per-cpu data. */
+                void __percpu *percpu;
+                unsigned int percpu_size;
+        #endif
+                void *noinstr_text_start;
+                unsigned int noinstr_text_size;
+
+        #ifdef CONFIG_TRACEPOINTS
+                unsigned int num_tracepoints;
+                tracepoint_ptr_t *tracepoints_ptrs;
+        #endif
+        #ifdef CONFIG_TREE_SRCU
+                unsigned int num_srcu_structs;
+                struct srcu_struct **srcu_struct_ptrs;
+        #endif
+        #ifdef CONFIG_BPF_EVENTS
+                unsigned int num_bpf_raw_events;
+                struct bpf_raw_event_map *bpf_raw_events;
+        #endif
+        #ifdef CONFIG_DEBUG_INFO_BTF_MODULES
+                unsigned int btf_data_size;
+                void *btf_data;
+        #endif
+        #ifdef CONFIG_JUMP_LABEL
+                struct jump_entry *jump_entries;
+                unsigned int num_jump_entries;
+        #endif
+        #ifdef CONFIG_TRACING
+                unsigned int num_trace_bprintk_fmt;
+                const char **trace_bprintk_fmt_start;
+        #endif
+        #ifdef CONFIG_EVENT_TRACING
+                struct trace_event_call **trace_events;
+                unsigned int num_trace_events;
+                struct trace_eval_map **trace_evals;
+                unsigned int num_trace_evals;
+        #endif
+        #ifdef CONFIG_FTRACE_MCOUNT_RECORD
+                unsigned int num_ftrace_callsites;
+                unsigned long *ftrace_callsites;
+        #endif
+        #ifdef CONFIG_KPROBES
+                void *kprobes_text_start;
+                unsigned int kprobes_text_size;
+                unsigned long *kprobe_blacklist;
+                unsigned int num_kprobe_blacklist;
+        #endif
+        #ifdef CONFIG_HAVE_STATIC_CALL_INLINE
+                int num_static_call_sites;
+                struct static_call_site *static_call_sites;
+        #endif
+        #if IS_ENABLED(CONFIG_KUNIT)
+                int num_kunit_suites;
+                struct kunit_suite **kunit_suites;
+        #endif
+
+
+        #ifdef CONFIG_LIVEPATCH
+                bool klp; /* Is this a livepatch module? */
+                bool klp_alive;
+
+                /* ELF information */
+                struct klp_modinfo *klp_info;
+        #endif
+
+        #ifdef CONFIG_PRINTK_INDEX
+                unsigned int printk_index_size;
+                struct pi_entry **printk_index_start;
+        #endif
+
+        #ifdef CONFIG_MODULE_UNLOAD
+                /* What modules depend on me? */
+                struct list_head source_list;
+                /* What modules do I depend on? */
+                struct list_head target_list;
+
+                /* Destruction function. */
+                void (*exit)(void);
+
+                atomic_t refcnt;
+        #endif
+
+        #ifdef CONFIG_CONSTRUCTORS
+                /* Constructor functions. */
+                ctor_fn_t *ctors;
+                unsigned int num_ctors;
+        #endif
+
+        #ifdef CONFIG_FUNCTION_ERROR_INJECTION
+                struct error_injection_entry *ei_funcs;
+                unsigned int num_ei_funcs;
+        #endif
+        #ifdef CONFIG_DYNAMIC_DEBUG_CORE
+                struct _ddebug_info dyndbg_info;
+        #endif
+        } ____cacheline_aligned __randomize_layout;
+
 - 申请设备号 register_chrdev_region()
 - 动态方式分配设备号 alloc_chrdev_region()  注销设备号 unregister_chrdev_region()
 - 初始化字符设备，cdev_init函数、cdev_add函数  cdev_del()  清除设备号
@@ -65,51 +252,51 @@ Linux驱动的一些学习记录（linux中一切皆文件！！！）
         g、节点aliases：别名
 - 设备树插件格式
 
- 格式一
+        格式一
 
-        /dts-v1/;
-        /plugin/;
+                /dts-v1/;
+                /plugin/;
 
-        / {
-                compatible = "allwinner,sun55i-t527";/** 设备主控信息，用于匹配 */
-                fragment@0 {
-                target-path = "/";
-                __overlay__ {
-                        /*在此添加要插入的节点*/
-                        .......
+                / {
+                        compatible = "allwinner,sun55i-t527";/** 设备主控信息，用于匹配 */
+                        fragment@0 {
+                        target-path = "/";
+                        __overlay__ {
+                                /*在此添加要插入的节点*/
+                                .......
+                        };
+                        };
+
+                        fragment@1 {
+                        target = <&XXXXX>;
+                        __overlay__ {
+                                /*在此添加要插入的节点*/
+                                .......
+                                compatible = "barco,bmi160";/** 插件信息，用于匹配 */
+                        };
+                        };
+                .......
                 };
+                第1行： 用于指定dts的版本。
+
+                第2行： 表示允许使用未定义的引用并记录它们，设备树插件中可以引用主设备树中的节点，而这些“引用的节点”对于设备树插件来说就是未定义的，所以设备树插件应该加上“/plugin/”。
+
+                第6行： 指定设备树插件的加载位置，默认我们加载到根节点下，既“target-path =“/”,或者使用target = <&XXXXX>，增加节点或者属性到某个节点下。
+
+                第7-8行： 我们要插入的设备及节点或者要引用(追加)的设备树节点放在__overlay__ {…}内，你可以增加、修改或者覆盖主设备树的节点。
+
+        格式二
+
+                /dts-v1/;
+                /plugin/;
+
+                &{/} {
+                /*此处在根节点"/"下,添加要插入的节点或者属性*/
                 };
 
-                fragment@1 {
-                target = <&XXXXX>;
-                __overlay__ {
-                        /*在此添加要插入的节点*/
-                        .......
-                        compatible = "barco,bmi160";/** 插件信息，用于匹配 */
+                &XXXXX {
+                /*此处在节点"XXXXX"下,添加要插入的节点或者属性*/
                 };
-                };
-        .......
-        };
-        第1行： 用于指定dts的版本。
-
-        第2行： 表示允许使用未定义的引用并记录它们，设备树插件中可以引用主设备树中的节点，而这些“引用的节点”对于设备树插件来说就是未定义的，所以设备树插件应该加上“/plugin/”。
-
-        第6行： 指定设备树插件的加载位置，默认我们加载到根节点下，既“target-path =“/”,或者使用target = <&XXXXX>，增加节点或者属性到某个节点下。
-
-        第7-8行： 我们要插入的设备及节点或者要引用(追加)的设备树节点放在__overlay__ {…}内，你可以增加、修改或者覆盖主设备树的节点。
-
- 格式二
-
-        /dts-v1/;
-        /plugin/;
-
-        &{/} {
-        /*此处在根节点"/"下,添加要插入的节点或者属性*/
-        };
-
-        &XXXXX {
-        /*此处在节点"XXXXX"下,添加要插入的节点或者属性*/
-        };
 
 - 命令行
 
@@ -140,11 +327,18 @@ Linux驱动的一些学习记录（linux中一切皆文件！！！）
         -o, --out <arg>
                 Output file
 
-- 加载命令行
-        sudo insmod i2c_bmi160.ko
+- 加载/卸载命令
+
+        modprobe在加载时会把依赖模块也一并加载，而insmod不会加载依赖模块
+
+        insmod工具实际上调用了系统调用init_module
+
+        rmmod工具卸载模块时，会调用系统调用delete_module
 
 - 在内核源码中编译设备树
+
         make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- npi_v7_defconfig
+
         make ARCH=arm -j4 CROSS_COMPILE=arm-linux-gnueabihf- dtbs
 
 四、shell脚本
