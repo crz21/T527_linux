@@ -87,10 +87,13 @@ ssize_t bmi160_read(struct file *filp, char __user *buf, size_t len, loff_t *off
     char rx_buf[200] = {0};
     int error;
 
-    len -= 1;
+    /** 先将用户空间的地址读到内核空间 */
+    error = copy_from_user(rx_buf, buf, 1);
+    /** 从设备读数据到内核空间 */
     i2c_read_bmi160(bmi160_client, rx_buf, len);
-    /*将读取得到的数据拷贝到用户空间*/
-    error = copy_to_user(buf, rx_buf, len);
+
+    /*将内核空间得到的数据拷贝到用户空间*/
+    error = copy_to_user(buf, rx_buf + 1, len);
 
     if (error != 0) {
         printk(KERN_EMERG "copy_to_user error!");

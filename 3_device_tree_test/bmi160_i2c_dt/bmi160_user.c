@@ -68,11 +68,13 @@ void mdelay(uint32_t ms)
 int8_t bmi160_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
 {
     int res, i = 0;
-    uint8_t tx_buf[20] = {0};
+    uint8_t tx_buf[200] = {0};
 
     tx_buf[0] = reg_addr;
     for (i = 0; i < len; i++) tx_buf[i + 1] = data[i];
-    res = read(fd, tx_buf, len + 1);
+    res = read(fd, tx_buf, len);
+    for (i = 0; i < len; i++) data[i] = tx_buf[i];
+
     if (res < 0) pabort("can't send message");
     return 0;
 }
@@ -80,7 +82,7 @@ int8_t bmi160_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t l
 int8_t bmi160_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
 {
     int res, i = 0;
-    uint8_t tx_buf[20] = {0};
+    uint8_t tx_buf[200] = {0};
 
     tx_buf[0] = reg_addr;
     for (i = 0; i < len; i++) tx_buf[i + 1] = data[i];

@@ -10,7 +10,7 @@
 			#size-cells = <0>;
 			pinctrl-0 = <&bmi160_pins_default>;
 			pinctrl-names = "default";
-			clock-frequency = <400000>;
+			clock-frequency = <40000>;
 			status = "okay";
 			bmi160@69 {
 				compatible = "barco,bmi160";
