@@ -15,7 +15,7 @@
 			bmi160@69 {
 				compatible = "barco,bmi160";
 				twi_drv_used = <1>;
-				reg = <69>;
+				reg = <0x69>;
 				status = "okay";
 			};
 		};

@@ -32,28 +32,7 @@ struct device_node *bmi160_device_node;  // 设备树节点结构体
 /*------------------IIC设备内容----------------------*/
 struct i2c_client *bmi160_client = NULL;  // 保存bmi160设备对应的i2c_client结构体，匹配成功后由.prob函数带回。
 
-static int i2c_write_bmi160(struct i2c_client *bmi160_client, uint8_t *data, uint32_t length)
-{
-    int error = 0;
-    struct i2c_msg send_msg;  // 要发送的数据结构体
-
-    /*发送 iic要写入的地址 reg*/
-    send_msg.addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
-    send_msg.flags = 0;                   // 标记为发送数据
-    send_msg.buf = data;                  // 写入的首地址
-    send_msg.len = length;                // reg长度
-
-    /*执行发送*/
-    error = i2c_transfer(bmi160_client->adapter, &send_msg, 1);
-
-    if (error != 1) {
-        printk(KERN_DEBUG "\n i2c_write_bmi160 error \n");
-        return -1;
-    }
-    return 0;
-}
-
-static int i2c_read_bmi160(struct i2c_client *bmi160_client, uint8_t *data, uint32_t length)
+static int i2c_read_bmi160(struct i2c_client *bmi160_client, char *data, uint32_t length)
 {
     int error = 0;
     uint8_t address_data = data[0];
@@ -73,7 +52,30 @@ static int i2c_read_bmi160(struct i2c_client *bmi160_client, uint8_t *data, uint
     error = i2c_transfer(bmi160_client->adapter, bmi160_msg, 2);
 
     if (error != 2) {
-        printk(KERN_DEBUG "\n i2c_read_bmi160 error\n");
+        printk(KERN_EMERG "i2c_read_bmi160 error\n");
+        return -1;
+    }
+    return 0;
+}
+
+static int i2c_write_bmi160(struct i2c_client *bmi160_client, char *data, uint32_t length)
+{
+    int error = 0;
+    struct i2c_msg send_msg;  // 要发送的数据结构体
+
+    /*发送 iic要写入的地址 reg*/
+    send_msg.addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
+    send_msg.flags = 0;                   // 标记为发送数据
+    send_msg.buf = data;                  // 写入的首地址
+    send_msg.len = length;                // reg长度
+
+    /*执行发送*/
+    error = i2c_transfer(bmi160_client->adapter, &send_msg, 1);
+
+    if (error != 1) {
+        printk(KERN_EMERG "addr=%d,buf[0]=%d,buf[1]=%d,len=%d\n", send_msg.addr, send_msg.buf[0], send_msg.buf[1],
+               send_msg.len);
+        printk(KERN_EMERG "i2c_write_bmi160 error,error=%d \n", error);
         return -1;
     }
     return 0;
@@ -82,15 +84,34 @@ static int i2c_read_bmi160(struct i2c_client *bmi160_client, uint8_t *data, uint
 /** 字符设备操作函数集，read */
 ssize_t bmi160_read(struct file *filp, char __user *buf, size_t len, loff_t *off)
 {
+    char rx_buf[200] = {0};
+    int error;
+
     len -= 1;
-    i2c_read_bmi160(bmi160_client, buf, len);
+    i2c_read_bmi160(bmi160_client, rx_buf, len);
+    /*将读取得到的数据拷贝到用户空间*/
+    error = copy_to_user(buf, rx_buf, len);
+
+    if (error != 0) {
+        printk(KERN_EMERG "copy_to_user error!");
+        return -1;
+    }
     return 0;
 }
 
 ssize_t bmi160_write(struct file *filp, const char __user *buf, size_t len, loff_t *off)
 {
-    len -= 1;
-    i2c_write_bmi160(bmi160_client, buf, len);
+    char tx_buf[200] = {0};
+    int error;
+
+    /*将用户空间的数据复制到内核空间*/
+    error = copy_from_user(tx_buf, buf, len);
+
+    if (error != 0) {
+        printk(KERN_EMERG "copy_to_user error!");
+        return -1;
+    }
+    i2c_write_bmi160(bmi160_client, tx_buf, len);
     return 0;
 }
 
@@ -134,7 +155,7 @@ static int bmi160_probe(struct i2c_client *client, const struct i2c_device_id *i
 {
     int ret = -1;
 
-    printk(KERN_EMERG "\t  match successed  \n");
+    printk(KERN_EMERG "match successed  \n");
 
     /** 采用动态分配的方式，获取设备编号，次设备号为0，设备名称为rgb-leds，可通过命令cat
      * /proc/devices查看DEV_CNT为1，当前只申请一个设备编号 */
@@ -153,7 +174,8 @@ static int bmi160_probe(struct i2c_client *client, const struct i2c_device_id *i
     if (ret < 0) {
         printk("fail to add cdev\n");
         goto add_err;
-    }
+    } else
+        printk(KERN_EMERG "bmi160_devno=%d\n", bmi160_devno);
 
     /** 创建类 */
     class_bmi160 = class_create(THIS_MODULE, DEV_NAME);
@@ -161,12 +183,13 @@ static int bmi160_probe(struct i2c_client *client, const struct i2c_device_id *i
     /** 创建设备 DEV_NAME 指定设备名 */
     device_bmi160 = device_create(class_bmi160, NULL, bmi160_devno, NULL, DEV_NAME);
     bmi160_client = client;
+    printk(KERN_EMERG "create successed \n");
     return 0;
 
 add_err:
     /** 添加设备失败时，需要注销设备号 */
     unregister_chrdev_region(bmi160_devno, DEV_CNT);
-    printk("\n error! \n");
+    printk(KERN_EMERG "\n add_err error! \n");
 alloc_err:
 
     return -1;

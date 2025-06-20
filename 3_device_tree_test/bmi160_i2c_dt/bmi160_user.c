@@ -73,8 +73,7 @@ int8_t bmi160_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t l
     tx_buf[0] = reg_addr;
     for (i = 0; i < len; i++) tx_buf[i + 1] = data[i];
     res = read(fd, tx_buf, len + 1);
-    printf("bmi160 read data\n");
-    if (res < 1) pabort("can't send message");
+    if (res < 0) pabort("can't send message");
     return 0;
 }
 
@@ -86,8 +85,7 @@ int8_t bmi160_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t 
     tx_buf[0] = reg_addr;
     for (i = 0; i < len; i++) tx_buf[i + 1] = data[i];
     res = write(fd, tx_buf, len + 1);
-    printf("bmi160 write data\n");
-    if (res < 1) pabort("can't send message");
+    if (res < 0) pabort("can't send message");
     return 0;
 }
 
@@ -246,12 +244,9 @@ int main(int argc, char *argv[])
     sensor.write = bmi160_write;
     sensor.delay_ms = mdelay;
     sensor.read_write_len = 32;
-    printf("test0\n");
     rslt = bmi160_soft_reset(&sensor);
-    printf("test1\n");
     sensor.delay_ms(200);
     rslt = bmi160_init(&sensor);
-    printf("test2\n");
     /********************************************************************/
 
     uint8_t reg_addr = BMI160_CHIP_ID_ADDR;

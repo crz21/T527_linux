@@ -341,4 +341,10 @@ Linux驱动的一些学习记录（linux中一切皆文件！！！）
 
         make ARCH=arm -j4 CROSS_COMPILE=arm-linux-gnueabihf- dtbs
 
+- 内核模块和应用层模块传输数据需要添加下面两个函数，内核数据不允许直接被应用层使用
+
+        copy_from_user(void *to, const void __user *from, unsigned long n)
+
+        copy_to_user(void __user *to, const void *from, unsigned long n)
+
 四、shell脚本
