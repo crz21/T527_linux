@@ -16,8 +16,6 @@
 #include <linux/types.h>
 #include <linux/uaccess.h>
 
-// #include "bmi160_defs.h"
-
 #define DEV_NAME "SPI_BMI160"
 #define DEV_CNT (1)
 
@@ -29,13 +27,13 @@ struct device *device_bmi160;            // 保存创建的设备
 struct device_node *bmi160_device_node;  // 设备树节点结构体
 
 /*------------------IIC设备内容----------------------*/
-struct i2c_client *bmi160_client = NULL;  // 保存bmi160设备对应的i2c_client结构体，匹配成功后由.prob函数带回。
+struct spi_controller  *bmi160_controller = NULL;  
 
-static int i2c_read_bmi160(struct i2c_client *bmi160_client, char *data, uint32_t length)
+static int spi_read_bmi160(struct spi_controller *bmi160_controller, char *data, uint32_t length)
 {
     int error = 0;
     uint8_t address_data = data[0];
-    struct i2c_msg bmi160_msg[2];
+    struct spi_message  bmi160_msg[2];
     /*设置读取位置msg*/
     bmi160_msg[0].addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
     bmi160_msg[0].flags = 0;                   // 标记为发送数据
@@ -57,10 +55,10 @@ static int i2c_read_bmi160(struct i2c_client *bmi160_client, char *data, uint32_
     return 0;
 }
 
-static int i2c_write_bmi160(struct i2c_client *bmi160_client, char *data, uint32_t length)
+static int spi_write_bmi160(struct spi_controller *bmi160_controller, char *data, uint32_t length)
 {
     int error = 0;
-    struct i2c_msg send_msg;  // 要发送的数据结构体
+    struct spi_message  send_msg;  // 要发送的数据结构体
 
     /*发送 iic要写入的地址 reg*/
     send_msg.addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
@@ -69,7 +67,7 @@ static int i2c_write_bmi160(struct i2c_client *bmi160_client, char *data, uint32
     send_msg.len = length;                // reg长度
 
     /*执行发送*/
-    error = i2c_transfer(bmi160_client->adapter, &send_msg, 1);
+    error = spi_transfer(bmi160_client->adapter, &send_msg, 1);
 
     if (error != 1) {
         printk(KERN_EMERG "addr=%d,buf[0]=%d,buf[1]=%d,len=%d\n", send_msg.addr, send_msg.buf[0], send_msg.buf[1],
@@ -89,7 +87,7 @@ ssize_t bmi160_read(struct file *filp, char __user *buf, size_t len, loff_t *off
     /** 先将用户空间的地址读到内核空间 */
     error = copy_from_user(rx_buf, buf, 1);
     /** 从设备读数据到内核空间 */
-    i2c_read_bmi160(bmi160_client, rx_buf, len);
+    spi_read_bmi160(bmi160_client, rx_buf, len);
 
     /*将内核空间得到的数据拷贝到用户空间*/
     error = copy_to_user(buf, rx_buf + 1, len);
@@ -113,7 +111,7 @@ ssize_t bmi160_write(struct file *filp, const char __user *buf, size_t len, loff
         printk(KERN_EMERG "copy_to_user error!");
         return -1;
     }
-    i2c_write_bmi160(bmi160_client, tx_buf, len);
+    spi_write_bmi160(bmi160_client, tx_buf, len);
     return 0;
 }
 
@@ -153,7 +151,7 @@ static struct file_operations bmi160_chr_dev_fops = {
 /** 字符设备操作函数集 end */
 
 /** 平台驱动函数集 start */
-static int bmi160_probe(struct i2c_client *client, const struct i2c_device_id *id)
+static int bmi160_probe(struct spi_controller *controller, const struct i2c_device_id *id)
 {
     int ret = -1;
 
@@ -184,7 +182,7 @@ static int bmi160_probe(struct i2c_client *client, const struct i2c_device_id *i
 
     /** 创建设备 DEV_NAME 指定设备名 */
     device_bmi160 = device_create(class_bmi160, NULL, bmi160_devno, NULL, DEV_NAME);
-    bmi160_client = client;
+    bmi160_controller = controller;
     printk(KERN_EMERG "create successed \n");
     return 0;
 
@@ -197,7 +195,7 @@ alloc_err:
     return -1;
 }
 
-static int bmi160_remove(struct i2c_client *client)
+static int bmi160_remove(struct spi_controller *bmi160_controller)
 {
     /** 删除设备 */
     printk(KERN_EMERG "\t  remove device!  \n");
@@ -209,13 +207,13 @@ static int bmi160_remove(struct i2c_client *client)
 }
 
 /*定义ID匹配表*/
-static const struct i2c_device_id gtp_device_id[] = {{"barco,bmi160", 0}, {}};
+static const struct spi_device_id gtp_device_id[] = {{"barco,bmi160", 0}, {}};
 
 /*定义设备树匹配表*/
 static const struct of_device_id bmi160_of_match_table[] = {{.compatible = "barco,bmi160"}, {/* sentinel */}};
 
 /*定义i2c总线设备结构体*/
-struct i2c_driver bmi160_driver = {
+struct spi_driver  bmi160_driver = {
     .probe = bmi160_probe,
     .remove = bmi160_remove,
     .id_table = gtp_device_id,
@@ -234,7 +232,7 @@ static int __init bmi160_driver_init(void)
     int ret;
 
     printk(KERN_EMERG "bmi160_driver_init\n");
-    ret = i2c_add_driver(&bmi160_driver);
+    ret = spi_register_driver(&bmi160_driver);
     return ret;
 }
 
@@ -242,7 +240,7 @@ static int __init bmi160_driver_init(void)
 static void __exit bmi160_driver_exit(void)
 {
     printk(KERN_EMERG "bmi160_driver_exit\n");
-    i2c_del_driver(&bmi160_driver);
+    spi_unregister_driver(&bmi160_driver);
 }
 
 module_init(bmi160_driver_init);
