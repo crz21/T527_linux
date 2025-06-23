@@ -1,0 +1,16 @@
+#
+# For a description of the syntax of this configuration file,
+# see scripts/kbuild/config-language.txt.
+#
+mainmenu "Users Configuration"
+
+# menu "Applications Settings"
+
+source "menu_demo/Kconfig"
+
+ config HELLO MODULE
+ tristate "hello-tristate"
+ default y
+ help
+    this is help test
+
