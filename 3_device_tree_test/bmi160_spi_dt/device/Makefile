@@ -1,4 +1,5 @@
 obj-m:=spi_bmi160.o
+# obj-$(CONFIG_BMI160_SPI)+=spi_bmi160.o
 PWD=$(shell pwd)
 all:
 	make -C $(KDIR) M=$(PWD) modules CROSS_COMPILE=''

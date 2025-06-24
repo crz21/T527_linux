@@ -1,11 +1,9 @@
-
 #include <linux/cdev.h>
 #include <linux/delay.h>
 #include <linux/device.h>
 #include <linux/errno.h>
 #include <linux/fs.h>
 #include <linux/gpio.h>
-#include <linux/i2c.h>
 #include <linux/init.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -13,8 +11,10 @@
 #include <linux/of_address.h>
 #include <linux/of_gpio.h>
 #include <linux/platform_device.h>
+#include <linux/spi/spi.h>
 #include <linux/types.h>
 #include <linux/uaccess.h>
+#include <linux/string.h>
 
 #define DEV_NAME "SPI_BMI160"
 #define DEV_CNT (1)
@@ -26,53 +26,62 @@ struct class *class_bmi160;              // 保存创建的类
 struct device *device_bmi160;            // 保存创建的设备
 struct device_node *bmi160_device_node;  // 设备树节点结构体
 
-/*------------------IIC设备内容----------------------*/
-struct spi_controller  *bmi160_controller = NULL;  
+/*------------------SPI设备内容----------------------*/
+struct spi_device *bmi160_device = NULL;
 
-static int spi_read_bmi160(struct spi_controller *bmi160_controller, char *data, uint32_t length)
+static int spi_read_bmi160(struct spi_device *device, char *data, uint32_t length)
 {
-    int error = 0;
-    uint8_t address_data = data[0];
-    struct spi_message  bmi160_msg[2];
-    /*设置读取位置msg*/
-    bmi160_msg[0].addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
-    bmi160_msg[0].flags = 0;                   // 标记为发送数据
-    bmi160_msg[0].buf = &address_data;         // 写入的首地址
-    bmi160_msg[0].len = 1;                     // 写入长度
+    int ret;
+    uint8_t txbuf[32] = {0};
+    struct spi_message *message;    // 定义发送的消息
+    struct spi_transfer *transfer;  // 定义传输结构体
 
-    /*设置读取位置msg*/
-    bmi160_msg[1].addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
-    bmi160_msg[1].flags = I2C_M_RD;            // 标记为读取数据
-    bmi160_msg[1].buf = data + 1;              // 读取得到的数据保存位置
-    bmi160_msg[1].len = length;                // 读取长度
+    /*申请空间*/
+    message = kzalloc(sizeof(struct spi_message), GFP_KERNEL);
+    transfer = kzalloc(sizeof(struct spi_transfer), GFP_KERNEL);
 
-    error = i2c_transfer(bmi160_client->adapter, bmi160_msg, 2);
+    // transfer->speed_hz = 2000000;
+    transfer->rx_buf = data;
+    transfer->len = length;
 
-    if (error != 2) {
-        printk(KERN_EMERG "i2c_read_bmi160 error\n");
+    spi_message_init(message);
+    spi_message_add_tail(transfer, message);
+
+    ret = spi_sync(device, message);
+    copy_to_user(txbuf, transfer->rx_buf, 10);
+    printk(KERN_EMERG "rec_data %x %x len %d\n", txbuf[0], txbuf[1], transfer->len);
+    kfree(message);
+    kfree(transfer);
+
+    if (ret != 0) {
+        printk(KERN_EMERG "i2c_write_bmi160 error\n");
         return -1;
     }
     return 0;
 }
 
-static int spi_write_bmi160(struct spi_controller *bmi160_controller, char *data, uint32_t length)
+static int spi_write_bmi160(struct spi_device *device, char *data, uint32_t length)
 {
-    int error = 0;
-    struct spi_message  send_msg;  // 要发送的数据结构体
+    int ret = 0;
+    struct spi_message *message;    // 定义发送的消息
+    struct spi_transfer *transfer;  // 定义传输结构体
 
-    /*发送 iic要写入的地址 reg*/
-    send_msg.addr = bmi160_client->addr;  // bmi160在 iic 总线上的地址
-    send_msg.flags = 0;                   // 标记为发送数据
-    send_msg.buf = data;                  // 写入的首地址
-    send_msg.len = length;                // reg长度
+    /*申请空间*/
+    message = kzalloc(sizeof(struct spi_message), GFP_KERNEL);
+    transfer = kzalloc(sizeof(struct spi_transfer), GFP_KERNEL);
 
-    /*执行发送*/
-    error = spi_transfer(bmi160_client->adapter, &send_msg, 1);
+    /*填充message和transfer结构体*/
+    transfer->tx_buf = data;
+    transfer->len = length;
+    spi_message_init(message);
+    spi_message_add_tail(transfer, message);
 
-    if (error != 1) {
-        printk(KERN_EMERG "addr=%d,buf[0]=%d,buf[1]=%d,len=%d\n", send_msg.addr, send_msg.buf[0], send_msg.buf[1],
-               send_msg.len);
-        printk(KERN_EMERG "i2c_write_bmi160 error,error=%d \n", error);
+    ret = spi_sync(device, message);
+    kfree(message);
+    kfree(transfer);
+
+    if (ret != 0) {
+        printk(KERN_EMERG "i2c_write_bmi160 error\n");
         return -1;
     }
     return 0;
@@ -87,9 +96,8 @@ ssize_t bmi160_read(struct file *filp, char __user *buf, size_t len, loff_t *off
     /** 先将用户空间的地址读到内核空间 */
     error = copy_from_user(rx_buf, buf, 1);
     /** 从设备读数据到内核空间 */
-    spi_read_bmi160(bmi160_client, rx_buf, len);
-
-    /*将内核空间得到的数据拷贝到用户空间*/
+    spi_read_bmi160(bmi160_device, rx_buf, len);
+    /** 将内核空间得到的数据拷贝到用户空间 */
     error = copy_to_user(buf, rx_buf + 1, len);
 
     if (error != 0) {
@@ -111,7 +119,7 @@ ssize_t bmi160_write(struct file *filp, const char __user *buf, size_t len, loff
         printk(KERN_EMERG "copy_to_user error!");
         return -1;
     }
-    spi_write_bmi160(bmi160_client, tx_buf, len);
+    spi_write_bmi160(bmi160_device, tx_buf, len);
     return 0;
 }
 
@@ -151,7 +159,7 @@ static struct file_operations bmi160_chr_dev_fops = {
 /** 字符设备操作函数集 end */
 
 /** 平台驱动函数集 start */
-static int bmi160_probe(struct spi_controller *controller, const struct i2c_device_id *id)
+static int bmi160_probe(struct spi_device *device)
 {
     int ret = -1;
 
@@ -182,7 +190,7 @@ static int bmi160_probe(struct spi_controller *controller, const struct i2c_devi
 
     /** 创建设备 DEV_NAME 指定设备名 */
     device_bmi160 = device_create(class_bmi160, NULL, bmi160_devno, NULL, DEV_NAME);
-    bmi160_controller = controller;
+    bmi160_device = device;
     printk(KERN_EMERG "create successed \n");
     return 0;
 
@@ -195,7 +203,7 @@ alloc_err:
     return -1;
 }
 
-static int bmi160_remove(struct spi_controller *bmi160_controller)
+static int bmi160_remove(struct spi_device *device)
 {
     /** 删除设备 */
     printk(KERN_EMERG "\t  remove device!  \n");
@@ -213,7 +221,7 @@ static const struct spi_device_id gtp_device_id[] = {{"barco,bmi160", 0}, {}};
 static const struct of_device_id bmi160_of_match_table[] = {{.compatible = "barco,bmi160"}, {/* sentinel */}};
 
 /*定义i2c总线设备结构体*/
-struct spi_driver  bmi160_driver = {
+struct spi_driver bmi160_driver = {
     .probe = bmi160_probe,
     .remove = bmi160_remove,
     .id_table = gtp_device_id,
@@ -247,5 +255,5 @@ module_init(bmi160_driver_init);
 module_exit(bmi160_driver_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("crz");
-MODULE_DESCRIPTION("hello module");
-MODULE_ALIAS("test_module");
+MODULE_DESCRIPTION("spi module");
+MODULE_ALIAS("spi_module");

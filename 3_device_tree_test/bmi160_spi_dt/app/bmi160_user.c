@@ -8,8 +8,6 @@
 #include <string.h>
 #include <unistd.h>
 
-// #include "spi_bmi160.h"
-
 struct bmi160_dev sensor;
 struct bmi160_sensor_data accel;
 struct bmi160_sensor_data gyro;

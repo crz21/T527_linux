@@ -1,42 +1,10 @@
 /dts-v1/;
 /plugin/;
 
-// / {
-//     compatible = "allwinner,sun55i-t527";
-// 	fragment@0 {
-// 		target = <&spi1>;
-// 		__overlay__ {
-// 			#address-cells = <1>;
-// 			#size-cells = <0>;
-// 			status = "okay";
-// 			bmi160@0 {
-// 				compatible = "barco,bmi160";
-// 				twi_drv_used = <1>;
-// 				reg = <0>;
-// 				status = "okay";
-// 			};
-// 		};
-// 	};
-
-// 	fragment@1 {
-// 		target = <&pio>;
-// 		__overlay__ {
-// 			bmi160_pins_default: twi1@0 {
-// 				pins = "PB4", "PB5";
-// 				function = "twi1";
-// 				drive-strength = <10>;
-// 				bias-pull-up;
-// 			};
-// 		};
-// 	};
-
-
-// };
-
 / {
 	compatible = "allwinner,sun55i-t527";
     fragment@0 {
-        target = <&spi0>;  /* 根据实际情况修改 SPI 控制器编号 */
+        target = <&spi1>;  /* 根据实际情况修改 SPI 控制器编号 */
         __overlay__ {
             #address-cells = <1>;
             #size-cells = <0>;
@@ -45,15 +13,26 @@
             bmi160@0 {  /* CS 片选信号编号，通常 BMI160 使用 CS0 */
                 compatible = "barco,bmi160";
                 reg = <0>;  /* SPI 片选信号编号 */
-                spi-max-frequency = <10000000>;  /* 10MHz，可根据需要调整 */
-                
-                /* SPI 模式配置 (CPOL=0, CPHA=0) */
-                /* 注意：BMI160 的 SPI 模式为 mode 0 或 mode 3，根据实际硬件确定 */
-                /* mode 0: cpol=0, cpha=0 (默认) */
-                /* mode 3: cpol=1, cpha=1 */
-                
+                spi-max-frequency = <5000000>;  /* 5MHz，可根据需要调整 */
+                /* 设置每个字为8位（默认是8位） */
+                bits-per-word = <8>;
+                /** endian = "big"; */             /* 大端字节序 */
+                /* endian = "little"; */
+                spi-msb-first;
+                /* 绕Z轴旋转180度 */
+                /** orientation = < -1 0 0 0 -1 0 0 0 1 >; */
+
+                /** spi-cpol：指定时钟极性（CPOL）
+                    存在该属性表示 CPOL=1（空闲时 SCK 为高电平）
+                    不存在该属性表示 CPOL=0（空闲时 SCK 为低电平）
+                    spi-cpha：指定时钟相位（CPHA）
+                    存在该属性表示 CPHA=1（数据在 SCK 的第二个边沿采样）
+                    不存在该属性表示 CPHA=0（数据在 SCK 的第一个边沿采样）
+                */
+                spi-cpol;
+                spi-cpha;
                 /* 中断配置 (如果使用中断) */
-                int-gpios = <&gpio0 10 GPIO_ACTIVE_LOW>;  /* 中断引脚，根据实际情况修改 */
+                // int-gpios = <&gpio0 10 GPIO_ACTIVE_LOW>;  /* 中断引脚，根据实际情况修改 */
                 
                 /* FIFO 水线配置 (可选) */
                 // fifo-watermark = <64>;  /* FIFO 触发阈值 */
