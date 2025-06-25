@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
     uint8_t chipID = 0;
     uint16_t len = 1;
     rslt = bmi160_get_regs(reg_addr, &chipID, len, &sensor);
-    printf("chipID = %d\n", chipID);
+    printf("chipID = %x\n", chipID);
     /********************************************************************/
 
     /* Select the Output data rate, range of accelerometer sensor */

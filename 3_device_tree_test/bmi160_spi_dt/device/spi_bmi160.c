@@ -39,9 +39,7 @@ int spi_transfer(struct spi_device *device, uint8_t *reg, int reg_len, uint8_t *
     transfer = kzalloc(sizeof(struct spi_transfer), GFP_KERNEL);
     transfer->tx_buf = tx_buf;
     transfer->rx_buf = rx_buf;
-    transfer->len = len + 1;
-    // transfer->speed_hz = 500000;
-    // transfer->bits_per_word = 8;
+    transfer->len = len;
     transfer->delay.value = 500;                  // 发送完成后的延时
     transfer->delay.unit = SPI_DELAY_UNIT_USECS;  // 发送完成后的延时
     transfer->tx_nbits = 1;                       // 单线制
@@ -66,7 +64,8 @@ static int spi_read_bmi160(struct spi_device *device, char *data, uint32_t len)
     tx_data[0] = data[0];
     for (i = 0; i < len; i++) tx_data[i + 1] = NOP;
 
-    ret = spi_transfer(device, &reg_addr, 1, tx_data, data, len);
+    ret = spi_transfer(device, &reg_addr, 1, tx_data, data, len + 1);
+    // printk(KERN_EMERG "buf[0]=%d,buf[1]=%d,buf[2]=%d,buf[3]=%d,len=%d\n", data[0], data[1], data[2], data[3], len);
     if (ret != 0) {
         printk(KERN_EMERG "i2c_write_bmi160 error\n");
         return -1;
