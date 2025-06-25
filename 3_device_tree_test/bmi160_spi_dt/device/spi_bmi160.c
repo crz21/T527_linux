@@ -30,7 +30,7 @@ struct device_node *bmi160_device_node;  // 设备树节点结构体
 struct spi_device *bmi160_device = NULL;
 #define NOP (0xFF)
 
-int spi_transfer(struct spi_device *device, uint8_t *reg, int reg_len, uint8_t *tx_buf, uint8_t *rx_buf, int len)
+int spi_transfer(struct spi_device *device, uint8_t *tx_buf, uint8_t *rx_buf, int len)
 {
     int res;
     struct spi_message *message;    // 定义发送的消息
@@ -40,7 +40,7 @@ int spi_transfer(struct spi_device *device, uint8_t *reg, int reg_len, uint8_t *
     transfer->tx_buf = tx_buf;
     transfer->rx_buf = rx_buf;
     transfer->len = len;
-    transfer->delay.value = 500;                  // 发送完成后的延时
+    transfer->delay.value = 300;                  // 发送完成后的延时
     transfer->delay.unit = SPI_DELAY_UNIT_USECS;  // 发送完成后的延时
     transfer->tx_nbits = 1;                       // 单线制
     transfer->rx_nbits = 1;                       // 单线制
@@ -63,9 +63,7 @@ static int spi_read_bmi160(struct spi_device *device, char *data, uint32_t len)
 
     tx_data[0] = data[0];
     for (i = 0; i < len; i++) tx_data[i + 1] = NOP;
-
-    ret = spi_transfer(device, &reg_addr, 1, tx_data, data, len + 1);
-    // printk(KERN_EMERG "buf[0]=%d,buf[1]=%d,buf[2]=%d,buf[3]=%d,len=%d\n", data[0], data[1], data[2], data[3], len);
+    ret = spi_transfer(device, tx_data, data, len + 1);
     if (ret != 0) {
         printk(KERN_EMERG "i2c_write_bmi160 error\n");
         return -1;
@@ -82,8 +80,7 @@ static int spi_write_bmi160(struct spi_device *device, char *data, uint32_t len)
 
     tx_data[0] = data[0];
     for (i = 0; i < len; i++) tx_data[i + 1] = data[i + 1];
-
-    ret = spi_transfer(device, &reg_addr, 1, tx_data, NULL, len);
+    ret = spi_transfer(device, tx_data, NULL, len);
     if (ret != 0) {
         printk(KERN_EMERG "i2c_write_bmi160 error\n");
         return -1;
