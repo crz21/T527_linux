@@ -12,9 +12,9 @@
 #include <linux/of_gpio.h>
 #include <linux/platform_device.h>
 #include <linux/spi/spi.h>
+#include <linux/string.h>
 #include <linux/types.h>
 #include <linux/uaccess.h>
-#include <linux/string.h>
 
 #define DEV_NAME "SPI_BMI160"
 #define DEV_CNT (1)
@@ -28,31 +28,45 @@ struct device_node *bmi160_device_node;  // 设备树节点结构体
 
 /*------------------SPI设备内容----------------------*/
 struct spi_device *bmi160_device = NULL;
+#define NOP (0xFF)
 
-static int spi_read_bmi160(struct spi_device *device, char *data, uint32_t length)
+int spi_transfer(struct spi_device *device, uint8_t *reg, int reg_len, uint8_t *tx_buf, uint8_t *rx_buf, int len)
 {
-    int ret;
-    uint8_t txbuf[32] = {0};
+    int res;
     struct spi_message *message;    // 定义发送的消息
     struct spi_transfer *transfer;  // 定义传输结构体
-
-    /*申请空间*/
     message = kzalloc(sizeof(struct spi_message), GFP_KERNEL);
     transfer = kzalloc(sizeof(struct spi_transfer), GFP_KERNEL);
-
-    // transfer->speed_hz = 2000000;
-    transfer->rx_buf = data;
-    transfer->len = length;
-
+    transfer->tx_buf = tx_buf;
+    transfer->rx_buf = rx_buf;
+    transfer->len = len + 1;
+    // transfer->speed_hz = 500000;
+    // transfer->bits_per_word = 8;
+    transfer->delay.value = 500;                  // 发送完成后的延时
+    transfer->delay.unit = SPI_DELAY_UNIT_USECS;  // 发送完成后的延时
+    transfer->tx_nbits = 1;                       // 单线制
+    transfer->rx_nbits = 1;                       // 单线制
+    transfer->cs_change = 0;                      // 传输后把cs线松开
     spi_message_init(message);
     spi_message_add_tail(transfer, message);
-
-    ret = spi_sync(device, message);
-    copy_to_user(txbuf, transfer->rx_buf, 10);
-    printk(KERN_EMERG "rec_data %x %x len %d\n", txbuf[0], txbuf[1], transfer->len);
+    res = spi_sync(device, message);  // 触发transfer
     kfree(message);
     kfree(transfer);
 
+    return res;
+}
+
+static int spi_read_bmi160(struct spi_device *device, char *data, uint32_t len)
+{
+    int ret = 0;
+    uint8_t tx_data[200] = {0};
+    uint8_t reg_addr = 0;
+    int i;
+
+    tx_data[0] = data[0];
+    for (i = 0; i < len; i++) tx_data[i + 1] = NOP;
+
+    ret = spi_transfer(device, &reg_addr, 1, tx_data, data, len);
     if (ret != 0) {
         printk(KERN_EMERG "i2c_write_bmi160 error\n");
         return -1;
@@ -60,26 +74,17 @@ static int spi_read_bmi160(struct spi_device *device, char *data, uint32_t lengt
     return 0;
 }
 
-static int spi_write_bmi160(struct spi_device *device, char *data, uint32_t length)
+static int spi_write_bmi160(struct spi_device *device, char *data, uint32_t len)
 {
     int ret = 0;
-    struct spi_message *message;    // 定义发送的消息
-    struct spi_transfer *transfer;  // 定义传输结构体
+    uint8_t tx_data[200] = {0};
+    uint8_t reg_addr = 0;
+    int i;
 
-    /*申请空间*/
-    message = kzalloc(sizeof(struct spi_message), GFP_KERNEL);
-    transfer = kzalloc(sizeof(struct spi_transfer), GFP_KERNEL);
+    tx_data[0] = data[0];
+    for (i = 0; i < len; i++) tx_data[i + 1] = data[i + 1];
 
-    /*填充message和transfer结构体*/
-    transfer->tx_buf = data;
-    transfer->len = length;
-    spi_message_init(message);
-    spi_message_add_tail(transfer, message);
-
-    ret = spi_sync(device, message);
-    kfree(message);
-    kfree(transfer);
-
+    ret = spi_transfer(device, &reg_addr, 1, tx_data, NULL, len);
     if (ret != 0) {
         printk(KERN_EMERG "i2c_write_bmi160 error\n");
         return -1;

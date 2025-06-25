@@ -4,4 +4,4 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.25.1)
 project(bmi160)
 
 # 添加文件到另一个文件
-add_subdirectory(./Src ./bin)
+add_subdirectory(./Src ./buind)
