@@ -227,6 +227,8 @@ Linux驱动的一些学习记录（linux中一切皆文件！！！）
 (也可以在驱动使用class_create创建设备类、在类的下面device_create创建设备节点)
 
 - 设备树中属性的意义
+ -dd
+ -ff
 
         a、compatible：设备节点中对应的节点信息已经被内核构造成struct platform_device。
         驱动可以通过相应的函数从中提取信息。compatible属性是用来查找节点的方法之一，另外还可以通过节点名或节点路径查找指定节点。
@@ -347,4 +349,3 @@ Linux驱动的一些学习记录（linux中一切皆文件！！！）
 
         copy_to_user(void __user *to, const void *from, unsigned long n)
 
-四、shell脚本
