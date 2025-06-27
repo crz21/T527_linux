@@ -8,12 +8,12 @@
         __overlay__ {
             #address-cells = <1>;
 			#size-cells = <0>;
-			pinctrl-0 = <&ov5640_dcmi_pins>;
+			pinctrl-0 = <&imx219_i2c_pins>;
 			pinctrl-names = "default";
             clock-frequency = <100000>;
 			status = "okay";
-            ov5640@3c { 
-                compatible = "crz,ov5640";
+            imx219@3c { 
+                compatible = "crz,imx219";
                 reg = <0x3c>; 
                 twi_drv_used = <1>;
                 status = "okay";
@@ -24,7 +24,7 @@
 	fragment@1 {
 		target = <&pio>;
 		__overlay__ {
-			ov5640_dcmi_pins: twi1@0 {
+			imx219_i2c_pins: twi1@0 {
 				pins = "PB4", "PB5";
 				function = "twi1";
 				drive-strength = <10>;
