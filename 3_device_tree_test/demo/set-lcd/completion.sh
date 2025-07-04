@@ -1,11 +1,24 @@
 #!/bin/bash
 
+source /boot/config.txt > /dev/null 2>&1
+
+# 判断是否保存了与overlay_prefix相同的设备树，有才允许该lcd的名称自动补全
+link_path=$(readlink -f /usr/bin/set-lcd)
+dir_path=$(dirname $link_path)
+for dir in $(ls -d "$dir_path/tft/"*/); do
+    if [ -d "$dir/dtb" ]; then
+        for file in $(ls "$dir/dtb/"*); do
+            if [[ $file == *"$overlay_prefix"* ]]; then
+                files+="$(basename $dir) "
+            fi
+        done
+    fi
+done
+
+
 _lcd_set () {
     local cur=${COMP_WORDS[COMP_CWORD]}
     if [ $COMP_CWORD -eq 1 ]; then
-        local link_path=$(readlink -f /usr/bin/set-lcd)
-        local dir_path=$(dirname $link_path)
-        local files=$(ls -d "$dir_path/tft/"*/ |  sed "s#$dir_path/tft/##"| sed 's#/##')
         COMPREPLY=($(compgen -W "$files" -- $cur))
     elif [ $COMP_CWORD -eq 2 ]; then
         local functions=$(grep -oP '^[^_]\w+\s*\(\)' /usr/bin/set-lcd | sed 's/()//')
@@ -17,4 +30,5 @@ _lcd_set () {
         COMPREPLY=($(compgen -W "$variable_value" -- $cur))
     fi
 }
+
 complete -F _lcd_set set-lcd

@@ -4,6 +4,8 @@
         "stdint.h": "c",
         "string.h": "c",
         "types.h": "c",
-        "errno.h": "c"
+        "errno.h": "c",
+        "imx219_i2c.h": "c",
+        "bmi160_user.h": "c"
     }
 }

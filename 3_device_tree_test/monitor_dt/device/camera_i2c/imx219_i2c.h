@@ -1,4 +1,4 @@
-#ifndef __SPI_BMI160_H__
-#define __SPI_BMI160_H__
+#ifndef __IMX219_I2C_H__
+#define __IMX219_I2C_H__
 
 #endif
