@@ -31,10 +31,10 @@ CFLAGS += -Wall
 
 
 
-CONFIG_FILE := $(KDIR)/.config
-ifeq ($(wildcard $(CONFIG_FILE)),)
-    CONFIG_FILE := .config  # 尝试当前目录的 .config
-endif
+# CONFIG_FILE := $(KDIR)/.config
+# ifeq ($(wildcard $(CONFIG_FILE)),)
+#     CONFIG_FILE := .config  # 尝试当前目录的 .config
+# endif
 
 export CC OBJS_DIR DTBO DTS DEV_DIR KDIR APP_OUT APP_IN CROSS_COMPILE CFLAGS ARCH
 
@@ -44,8 +44,8 @@ $(SUBDIRS):ECHO
 ECHO:
 	@echo $(SUBDIRS)
 
-menuconfig:
-	./soc_select_config
+# menuconfig:
+# 	./soc_select_config
 
 .PHONE:clean
 clean:
