@@ -1,6 +1,0 @@
-
-menu "Inertial measurement units"
-
-# source "device/Kconfig"
-
-endmenu

@@ -1,0 +1,1 @@
+cmd_/home/pi/bmi160_spi_dt/device/spi_bmi160.ko := aarch64-none-linux-gnu-ld -r -EL  -maarch64elf -z noexecstack --build-id=sha1  -T scripts/module.lds -o /home/pi/bmi160_spi_dt/device/spi_bmi160.ko /home/pi/bmi160_spi_dt/device/spi_bmi160.o /home/pi/bmi160_spi_dt/device/spi_bmi160.mod.o;  true
