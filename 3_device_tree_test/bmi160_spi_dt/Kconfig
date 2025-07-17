@@ -1,0 +1,17 @@
+mainmenu "bmi160 spi dt config "
+
+menu "Select SoC"
+
+    config ENABLE_T527
+        bool "Enable T527"
+        default n
+        help
+            if enable t527, then disable rk3576
+
+    config ENABLE_RK3576
+        bool "Enable RK3576"
+        default y
+        help
+            if enable rk3576, then disable t527
+endmenu
+
