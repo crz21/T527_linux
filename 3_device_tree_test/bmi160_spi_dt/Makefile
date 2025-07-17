@@ -11,7 +11,7 @@ PWD=$(shell pwd)
 
 -include soc_select.config
 
-if ($(CONFIG_ENABLE_T527),y)
+ifeq ($(CONFIG_ENABLE_T527),y)
 KDIR:=/lib/modules/`uname -r`/build # 全志t527专用
 CROSS_COMPILE=
 ARCH=
