@@ -25,6 +25,7 @@ uint64_t timer_u64 = 0;
 uint64_t lastTime_u64 = 0;
 uint8_t set_gyro_angles_u8 = 0;
 uint32_t loopHz_u64, loopTime_u64;
+FILE *csv_file;
 
 /** Set initial input parameters */
 enum BMI160_Ascale { AFS_RAW = 0, AFS_2G, AFS_4G, AFS_8G, AFS_16G };
@@ -44,6 +45,21 @@ uint8_t BMI160_Ascale_bit, BMI160_Gscale_bit;
 float bmi160_aRes, bmi160_gRes;
 
 int fd;
+
+void write_csv_header(FILE *file) { fprintf(file, "num,ax,ay,az,gx,gy,gz,pitch_f32,roll_f32\n"); }
+
+// void write_data_to_csv(FILE *file, uint16_t num, float a_x, float a_y, float a_z, float g_x, float g_y, float g_z,
+//                        float f_pitch, float f_roll)
+// {
+//     fprintf(file, "%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n", num, a_x, a_y, a_z, g_x, g_y, g_z, f_pitch,
+//     f_roll);
+// }
+
+void write_data_to_csv(FILE *file, uint32_t num, int16_t a_x, int16_t a_y, int16_t a_z, int16_t g_x, int16_t g_y,
+                       int16_t g_z, float f_pitch, float f_roll)
+{
+    fprintf(file, "%d,%d,%d,%d,%d,%d,%d,%.2f,%.2f\n", num, a_x, a_y, a_z, g_x, g_y, g_z, f_pitch, f_roll);
+}
 
 static void pabort(const char *s)
 {
@@ -224,6 +240,8 @@ int main(int argc, char *argv[])
 {
     int8_t rslt;
     static uint16_t cnt;
+    static uint32_t imu_cnt = 0;
+    static uint8_t imu_flag = 1;
 
     fd = open(DEV_OPERATION, O_RDWR);
     if (fd < 0) {
@@ -306,7 +324,14 @@ int main(int argc, char *argv[])
 
     imu_t.INIT_OK_i8 = rslt;
     while (rslt == 1);
+    // 打开文件用于写入，如果文件不存在则创建
+    csv_file = fopen("imu.csv", "w");
+    if (csv_file == NULL) {
+        printf("无法打开文件进行写入\n");
+    }
 
+    // 写入CSV头部
+    write_csv_header(csv_file);
     for (;;) {
         // Read an process data at 1000 Hz rate
         if (imu_t.INIT_OK_i8 != TRUE) {
@@ -354,12 +379,38 @@ int main(int argc, char *argv[])
             // integrate calculated pitch and roll with previous values
             pitch_f32 = pitch_f32 * 0.75f + gyro_pitch_f32 * 0.25f;
             roll_f32 = roll_f32 * 0.75f + gyro_roll_f32 * 0.25f;
-        }
-        sensor.delay_ms(1);
+            // printf("gX_f32 = %.2f, pitch_f32 = %.2f, roll_f32 = %.2f, num = %d\n", gX_f32, pitch_f32, roll_f32,
+            //        imu_cnt);
+            // imu_cnt++;
 
+            // // write_data_to_csv(csv_file, imu_cnt, aX_f32, aY_f32, aZ_f32, gX_f32, gY_f32, gZ_f32, pitch_f32,
+            // // roll_f32);
+            // write_data_to_csv(csv_file, imu_cnt, accel.x, accel.y, accel.z, gyro.x, gyro.y, gyro.z, pitch_f32,
+            //                   roll_f32);
+            // if (imu_cnt >= 5000) {
+            //     if (imu_flag) {
+            //         imu_flag = 0;
+            //         fclose(csv_file);
+            //     }
+            // }
+        }
+
+        sensor.delay_ms(1);
+        // usleep(100);
         if (++cnt > 100) {
             cnt = 0;
-            printf("pitch_f32 = %.2f  roll_f32 = %.2f\n", pitch_f32, roll_f32);
+            printf("gX_f32 = %.2f, pitch_f32 = %.2f, roll_f32 = %.2f, num = %d\n", gX_f32, pitch_f32, roll_f32,
+                   imu_cnt);
+            imu_cnt++;
+
+            write_data_to_csv(csv_file, imu_cnt, accel.x, accel.y, accel.z, gyro.x, gyro.y, gyro.z, pitch_f32,
+                              roll_f32);
+            if (imu_cnt >= 72000) {
+                if (imu_flag) {
+                    imu_flag = 0;
+                    fclose(csv_file);
+                }
+            }
         }
     }
 }

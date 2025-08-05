@@ -1,0 +1,25 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "rockchip,rk3576";
+    fragment@0 {
+        target = <&spi1>;  
+        __overlay__ {
+            #address-cells = <1>;
+            #size-cells = <0>;
+            status = "okay";
+            bmi160@0 {  
+                compatible = "barco,bmi160";
+                reg = <0>; 
+                spi-max-frequency = <2000000>;  
+                bits-per-word = <8>;
+                spi-msb-first;
+                spi-cpol;
+                spi-cpha;
+                status = "okay";
+            };
+        };
+    };
+};
+

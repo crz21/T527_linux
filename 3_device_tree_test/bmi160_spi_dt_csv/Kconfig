@@ -1,0 +1,21 @@
+mainmenu "bmi160 spi dt config "
+
+menu "Select SoC"
+
+choice
+    
+    prompt "Select ont option"
+    default ENABLE_RK3576
+    help
+      This is a choice between several mutually exclusive options.
+
+    config ENABLE_T527
+        bool "Enable T527"
+    
+    config ENABLE_RK3576
+        bool "Enable RK3576"
+
+endchoice
+
+endmenu
+
