@@ -46,7 +46,7 @@ float bmi160_aRes, bmi160_gRes;
 
 int fd;
 
-void write_csv_header(FILE *file) { fprintf(file, "num,ax,ay,az,gx,gy,gz,pitch_f32,roll_f32\n"); }
+void write_csv_header(FILE *file) { fprintf(file, "num,ax,ay,az,gx,gy,gz,f_ax,f_ay,f_az,f_gx,f_gy,f_gz,pitch_f32,roll_f32\n"); }
 
 // void write_data_to_csv(FILE *file, uint16_t num, float a_x, float a_y, float a_z, float g_x, float g_y, float g_z,
 //                        float f_pitch, float f_roll)
@@ -56,9 +56,11 @@ void write_csv_header(FILE *file) { fprintf(file, "num,ax,ay,az,gx,gy,gz,pitch_f
 // }
 
 void write_data_to_csv(FILE *file, uint32_t num, int16_t a_x, int16_t a_y, int16_t a_z, int16_t g_x, int16_t g_y,
-                       int16_t g_z, float f_pitch, float f_roll)
+                       int16_t g_z, float f_a_x, float f_a_y, float f_a_z, float f_g_x, float f_g_y, float f_g_z,
+                       float f_pitch, float f_roll)
 {
-    fprintf(file, "%d,%d,%d,%d,%d,%d,%d,%.2f,%.2f\n", num, a_x, a_y, a_z, g_x, g_y, g_z, f_pitch, f_roll);
+    fprintf(file, "%d,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n", num, a_x, a_y, a_z, g_x, g_y, g_z,
+            f_a_x, f_a_y, f_a_z, f_g_x, f_g_y, f_g_z, f_pitch, f_roll);
 }
 
 static void pabort(const char *s)
@@ -399,13 +401,15 @@ int main(int argc, char *argv[])
         // usleep(100);
         if (++cnt > 100) {
             cnt = 0;
-            printf("gX_f32 = %.2f, pitch_f32 = %.2f, roll_f32 = %.2f, num = %d\n", gX_f32, pitch_f32, roll_f32,
-                   imu_cnt);
+            printf("\nnum = %d\n", imu_cnt);
+            printf("accelx = %d accely = %d accelz = %d gyrox = %d gyroy = %d gyroz = %d\n",accel.x, accel.y, accel.z, gyro.x, gyro.y, gyro.z);
+            printf("aX_f32 = %.2f aY_f32 = %.2f aZ_f32 = %.2f gX_f32 = %.2f gY_f32 = %.2f gZ_f32 = %.2f\n",imu_t.BMI160_Ax_f32, imu_t.BMI160_Ay_f32, imu_t.BMI160_Az_f32, imu_t.BMI160_Gx_f32, imu_t.BMI160_Gy_f32, imu_t.BMI160_Gz_f32);
+
             imu_cnt++;
 
-            write_data_to_csv(csv_file, imu_cnt, accel.x, accel.y, accel.z, gyro.x, gyro.y, gyro.z, pitch_f32,
-                              roll_f32);
+            write_data_to_csv(csv_file, imu_cnt, accel.x, accel.y, accel.z, gyro.x, gyro.y, gyro.z, imu_t.BMI160_Ax_f32, imu_t.BMI160_Ay_f32, imu_t.BMI160_Az_f32, imu_t.BMI160_Gx_f32, imu_t.BMI160_Gy_f32, imu_t.BMI160_Gz_f32, pitch_f32, roll_f32);
             if (imu_cnt >= 72000) {
+                imu_cnt = 0;
                 if (imu_flag) {
                     imu_flag = 0;
                     fclose(csv_file);
@@ -414,3 +418,8 @@ int main(int argc, char *argv[])
         }
     }
 }
+
+
+
+
+
