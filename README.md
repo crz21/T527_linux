@@ -119,8 +119,8 @@ Linux驱动的一些学习记录（linux中一切皆文件！！！）
 
 
     
-             dtc         -o
-        dts -----> dtb -----> dtbo
+             dtc         
+        dts -----> dtb (dtbo)
 
 
         -@, --symbols
