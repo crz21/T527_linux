@@ -204,7 +204,7 @@ alloc_err:
     return -1;
 }
 
-static int bmi160_remove(struct spi_device *device)
+static void bmi160_remove(struct spi_device *device)
 {
     /** 删除设备 */
     printk(KERN_EMERG "\t  remove device!  \n");
@@ -212,7 +212,7 @@ static int bmi160_remove(struct spi_device *device)
     class_destroy(class_bmi160);                      // 清除类
     cdev_del(&bmi160_chr_dev);                        // 清除设备号
     unregister_chrdev_region(bmi160_devno, DEV_CNT);  // 取消注册字符设备
-    return 0;
+    //return 0;
 }
 
 /*定义ID匹配表*/

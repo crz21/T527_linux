@@ -1,0 +1,1 @@
+cmd_/home/tp_21/T527_linux/3_device_tree_test/bmi160_spi_dt_csv/device/spi_bmi160.mod := printf '%s\n'   spi_bmi160.o | awk '!x[$$0]++ { print("/home/tp_21/T527_linux/3_device_tree_test/bmi160_spi_dt_csv/device/"$$0) }' > /home/tp_21/T527_linux/3_device_tree_test/bmi160_spi_dt_csv/device/spi_bmi160.mod
