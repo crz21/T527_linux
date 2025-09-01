@@ -32,10 +32,11 @@ static int of_node_configfs_validate(struct config_item *item)
 	return 0;
 }
 
+/** 释放节点资源（如属性、设备树节点引用等） */ 
 static void of_node_configfs_release(struct config_item *item)
 {
 	struct of_configfs_node *node = to_of_node(item);
-	// 释放节点资源（如属性、设备树节点引用等）
+	
 	mutex_destroy(&node->lock);
 	kfree(node);
 }
@@ -86,4 +87,4 @@ module_exit(of_configfs_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("OF configfs support for 6.1 kernel");
-MODULE_AUTHOR("Your Name");
+MODULE_AUTHOR("CZR21");
