@@ -1,0 +1,161 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    //  数据通路：imx219_i2c —> csi2_dphy0 —> mipi2_csi2 —> rkcif_mipi_lvds2 —> rkcif_mipi_lvds2_sditf —> rkisp0_vir2
+	compatible = "rockchip,rk3576";
+    
+    // 配置IMX219传感器imx219_i2c
+    fragment@0 {
+        target = <&i2c1>;  
+        __overlay__ {
+            status = "okay";
+            #address-cells = <1>;
+            #size-cells = <0>;
+            clock-frequency = <400000>;
+            imx219@10 {  
+                status = "okay";
+                compatible = "sony,imx219";
+                reg = <0x10>; 
+                clocks = <&cru CLK_MIPI_CAMERAOUT_M1>;
+                clock-rates = <24000000>;
+                clock-names = "xvclk";
+                pwdn-gpios = <&gpio1 RK_PC2 GPIO_ACTIVE_HIGH>;
+                power-domains = <&power RK3576_PD_VI>;
+                avdd-supply = <&vcc2v8_cam>;  // 模拟电源（AVDD）
+                dvdd-supply = <&vcc1v8_cam>;  // 数字核心电源（DVDD）
+                dovdd-supply = <&vcc1v8_cam>; // 数字输出电源（DOVDD）
+                rockchip,camera-module-index = <0>;
+				rockchip,camera-module-facing = "back";
+				rockchip,camera-module-name = "RK-CMK-8M-2-v1";
+                rockchip,camera-module-lens-name = "CK8401";
+                port {
+                    imx219_out: endpoint {
+                        remote-endpoint = <&mipi_dphy0_in_imx219>;
+                        data-lanes = <1 2>; 
+                    };
+                };
+            };
+        };
+    };
+
+    // csi2_dphy0
+    fragment@1 {
+        target = <&csi2_dphy0>;  
+        __overlay__ {
+            status = "okay";
+            ports {
+                #address-cells = <1>;
+                #size-cells = <0>;
+                port@0 {
+                    reg = <0>;
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    mipi_dphy0_in_imx219: endpoint@1 {
+                            reg = <1>;
+                            remote-endpoint = <&imx219_out>;
+                            data-lanes = <1 2>;
+                    };
+                };
+                port@1 {
+                    reg = <1>;
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    csidphy0_out: endpoint@0 {
+                        reg = <0>;
+                        remote-endpoint = <&mipi2_csi2_input>;
+                    };
+                };
+            };
+        };
+    };
+
+    // mipi2_csi2
+    fragment@2 {
+        target = <&mipi2_csi2>;  
+        __overlay__ {
+            status = "okay";
+            ports {
+                #address-cells = <1>;
+                #size-cells = <0>;
+                port@0 {
+                    reg = <0>;
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    mipi2_csi2_input: endpoint@1 {
+                        reg = <1>;
+                        remote-endpoint = <&csidphy0_out>;
+                    };
+                };
+
+                port@1 {
+                    reg = <1>;
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    mipi2_csi2_output: endpoint@0 {
+                        reg = <0>;
+                        remote-endpoint = <&cif_mipi_in1>;
+                    };
+                };
+            };
+        };
+    };
+
+    // rkcif_mipi_lvds2
+    fragment@3 {
+        target = <&rkcif_mipi_lvds2>;  
+        __overlay__ {
+            status = "okay";
+            port {
+                cif_mipi_in1: endpoint {
+                    remote-endpoint = <&mipi2_csi2_output>;
+                };
+            };
+        };
+    };
+
+    // rkcif_mipi_lvds2_sditf
+    fragment@4 {
+        target = <&rkcif_mipi_lvds2_sditf>;  
+        __overlay__ {
+            status = "okay";
+            port {
+                #address-cells = <1>;
+                #size-cells = <0>;
+                mipi_lvds2_sditf: endpoint@0 {
+                    reg = <0>;
+                    remote-endpoint = <&isp_vir2_in0>;
+                };
+            };
+        };
+    };
+
+    // rkisp_vir1
+    fragment@5 {
+        target = <&rkisp_vir2>;
+        __overlay__ {
+            status = "okay";
+            port {
+                #address-cells = <1>;
+                #size-cells = <0>;
+                isp_vir2_in0: endpoint@0 {
+                    reg = <0>;
+                    remote-endpoint = <&mipi_lvds2_sditf>;
+                };
+            };
+        };
+    };
+
+    fragment@6 {
+       target = <&pinctrl>;
+        __overlay__{
+            status = "okay";
+            camera {
+                cam_pwdn_gpio: cam-pwdn-gpio {
+                    rockchip,pins = <1 RK_PC2 RK_FUNC_GPIO &pcfg_pull_up>;
+                };
+            };
+        };
+    };
+};
+
