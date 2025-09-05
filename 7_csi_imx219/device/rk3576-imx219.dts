@@ -4,25 +4,47 @@
 / {
     //  数据通路：imx219_i2c —> csi2_dphy0 —> mipi2_csi2 —> rkcif_mipi_lvds2 —> rkcif_mipi_lvds2_sditf —> rkisp0_vir2
 	compatible = "rockchip,rk3576";
-    
+
+    fragment@0{
+    	target = <&imx219_clk>;
+         __overlay__{
+            status = "okay";
+            compatible = "fixed-clock";
+            #clock-cells = <0>;
+            clock-frequency = <24000000>;
+            clock-output-names = "imx219_clk";
+        };
+    };
+
+    fragment@1{
+    	target = <&gpio1>;
+         __overlay__{
+           	compatible = "rockchip,gpio-bank";
+			reg = <0x0 0x2ae10000 0x0 0x200>;
+			// interrupts = <GIC_SPI 157 IRQ_TYPE_LEVEL_HIGH>;
+			// clocks = <&cru PCLK_GPIO1>, <&cru DBCLK_GPIO1>;
+			// gpio-controller;
+			// #gpio-cells = <2>;
+			// gpio-ranges = <&pinctrl 0 32 32>;
+			// interrupt-controller;
+			// #interrupt-cells = <2>;
+        };
+    };
+
     // 配置IMX219传感器imx219_i2c
-    fragment@0 {
+    fragment@2 {
         target = <&i2c1>;  
         __overlay__ {
             status = "okay";
-            // pinctrl-0 = <&i2c0m0_xfer>;
+            // pinctrl-0 = <&i2c1m0_xfer>;
             #address-cells = <1>;
             #size-cells = <0>;
             imx219@10 {  
                 status = "okay";
                 compatible = "sony,imx219";
                 reg = <0x10>; 
-                // clocks = <&imx219_clk>;
-                // reset-gpios = <&gpio1 RK_PC2 GPIO_ACTIVE_HIGH>;
-                // pwdn-gpios = <&gpio1 RK_PC2 GPIO_ACTIVE_HIGH>;
-                // power-domains = <&power RK3576_PD_VI>;
-                // clocks = <&cru CLK_MIPI_CAMERAOUT_M1>;
-                // clock-names = "xvclk";
+                clocks = <&imx219_clk>;
+                reset-gpios = <&gpio1 18 GPIO_ACTIVE_HIGH>;
                 rockchip,camera-module-index = <0>;
                 rockchip,camera-module-facing = "back";
                 rockchip,camera-module-name = "CMK-OT1980-PX1";
@@ -39,7 +61,7 @@
     };
 
     // csi2_dphy0
-    fragment@1 {
+    fragment@3 {
         target = <&csi2_dphy3>;  
         __overlay__ {
             status = "okay";
@@ -72,7 +94,7 @@
     };
 
     // mipi2_csi2
-    fragment@2 {
+    fragment@4 {
         target = <&mipi4_csi2>;  
         __overlay__ {
             status = "okay";
@@ -105,7 +127,7 @@
     };
 
     // rkcif_mipi_lvds2
-    fragment@3 {
+    fragment@5 {
         target = <&rkcif_mipi_lvds3>;  
         __overlay__ {
             status = "okay";
@@ -118,7 +140,7 @@
     };
 
     // rkcif_mipi_lvds2_sditf
-    fragment@4 {
+    fragment@6 {
         target = <&rkcif_mipi_lvds3_sditf>;  
         __overlay__ {
             status = "okay";
@@ -131,7 +153,7 @@
     };
 
     // rkisp_vir1
-    fragment@5 {
+    fragment@7 {
         target = <&rkisp_vir1>;
         __overlay__ {
             status = "okay";
@@ -145,6 +167,9 @@
             };
         };
     };
+
+
+
 
     // fragment@6 {
     //    target = <&pinctrl>;
