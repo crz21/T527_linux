@@ -179,118 +179,8 @@
 	status = "disabled";
 };
 
-&i2c1 {
-	status = "okay";
-
-	vm149c_2: vm149c@c {
-                compatible = "silicon touch,vm149c";
-                status = "okay";
-                reg = <0x0c>;
-                rockchip,camera-module-index = <1>;
-                rockchip,camera-module-facing = "back";
-        };
-
-	ov13850_2: ov13850@36 {
-                compatible = "ovti,ov13850";
-                status = "okay";
-                reg = <0x36>;
-                clocks = <&cru CLK_MIPI_CAMERAOUT_M1>;
-                clock-names = "xvclk";
-                pwdn-gpios = <&gpio1 RK_PC2 GPIO_ACTIVE_HIGH>;
-                power-domains = <&power RK3576_PD_VI>;
-                rockchip,camera-module-index = <1>;
-		rockchip,camera-module-facing = "back";
-		rockchip,camera-module-name = "RK-CMK-8M-2-v1";
-                rockchip,camera-module-lens-name = "CK8401";
-                lens-focus = <&vm149c_2>;
-
-                port {
-                        camera2_out: endpoint {
-                                remote-endpoint = <&mipi_dphy3_in_tl13850>;
-                                data-lanes = <1 2 3 4>;
-			};
-                };
-        };
-		// imx219_2: imx219@10 {
-        //         compatible = "sony,imx219";
-        //         reg = <0x10>;
-        //         status = "okay";
-        //         pwdn-gpios = <&gpio1 RK_PC2 GPIO_ACTIVE_HIGH>;
-		// 		power-domains = <&power RK3576_PD_VI>;
-		// 		clocks = <&imx219_clk>;
-        //         rockchip,camera-module-index = <1>;
-        //         rockchip,camera-module-facing = "back";
-        //         rockchip,camera-module-name = "CMK-OT1980-PX1";
-        //         rockchip,camera-module-lens-name = "SHG102";
-
-        //         port {
-        //                 camera2_out: endpoint {
-        //                         link-frequencies = /bits/ 64 <456000000>;
-        //                         remote-endpoint = <&mipi_dphy3_in_imx219>;
-        //                         data-lanes = <1 2>;
-        //                 };
-        //         };
-        // };
-};
-
 &i2c4 {
 	status = "disabled";
-};
-
-&i2c6 {
-	status = "okay";
-	pinctrl-names = "default";
-	pinctrl-0 = <&i2c6m0_xfer>;
-
-	// vm149c_1: vm149c@c {
-    //             compatible = "silicon touch,vm149c";
-    //             status = "okay";
-    //             reg = <0x0c>;
-    //             rockchip,camera-module-index = <0>;
-    //             rockchip,camera-module-facing = "back";
-    //     };
-
-    //     ov13850_1: ov13850@36 {
-    //             compatible = "ovti,ov13850";
-    //             status = "okay";
-    //             reg = <0x36>;
-    //             clocks = <&cru CLK_MIPI_CAMERAOUT_M1>;
-    //             clock-names = "xvclk";
-	// 	pwdn-gpios = <&gpio1 RK_PB3 GPIO_ACTIVE_HIGH>;
-    //             power-domains = <&power RK3576_PD_VI>;
-    //             rockchip,camera-module-index = <0>;
-    //             rockchip,camera-module-facing = "back";
-    //             rockchip,camera-module-name = "RK-CMK-8M-2-v1";
-    //             rockchip,camera-module-lens-name = "CK8401";
-    //             lens-focus = <&vm149c_1>;
-
-    //             port {
-    //                     camera1_out: endpoint {
-	// 			remote-endpoint = <&mipi_dphy0_in_tl13850>;
-	// 			data-lanes = <1 2 3 4>;
-	// 		};
-    //             };
-    //     };
-
-	imx219_2: imx219@10 {
-		compatible = "sony,imx219";
-		reg = <0x10>;
-		status = "okay";
-		pwdn-gpios = <&gpio1 RK_PB3 GPIO_ACTIVE_LOW>;
-		power-domains = <&power RK3576_PD_VI>;
-		clocks = <&imx219_clk>;
-		rockchip,camera-module-index = <0>;
-		rockchip,camera-module-facing = "back";
-		rockchip,camera-module-name = "CMK-OT1980-PX1";
-		rockchip,camera-module-lens-name = "SHG102";
-		port {
-			camera1_out: endpoint {
-				link-frequencies = /bits/ 64 <456000000>;
-				remote-endpoint = <&mipi_dphy0_in_imx219>;
-				data-lanes = <1 2>;
-			};
-		};
-	};
 };
 
 &i2c9 {
@@ -385,33 +275,58 @@
 	};
 };
 
-&csi2_dphy0 {
+&i2c1 {
 	status = "okay";
-	ports {
-		#address-cells = <1>;
-		#size-cells = <0>;
-		port@0 {
-			reg = <0>;
-			#address-cells = <1>;
-			#size-cells = <0>;
-			// mipi_dphy0_in_tl13850: endpoint@1 {
-			mipi_dphy0_in_imx219: endpoint@1 {
-			reg = <1>;
-			remote-endpoint = <&camera1_out>;
-			// data-lanes = <1 2 3 4>;
-			data-lanes = <1 2>;
-			};
-		};
-		port@1 {
-			reg = <1>;
-			#address-cells = <1>;
-			#size-cells = <0>;
-			csidphy0_out: endpoint@0 {
-			reg = <0>;
-			remote-endpoint = <&mipi2_csi2_input>;
-			};
-		};
-	};
+
+	// vm149c_2: vm149c@c {
+    //             compatible = "silicon touch,vm149c";
+    //             status = "okay";
+    //             reg = <0x0c>;
+    //             rockchip,camera-module-index = <1>;
+    //             rockchip,camera-module-facing = "back";
+    //     };
+
+	// ov13850_2: ov13850@36 {
+    //             compatible = "ovti,ov13850";
+    //             status = "okay";
+    //             reg = <0x36>;
+    //             clocks = <&cru CLK_MIPI_CAMERAOUT_M1>;
+    //             clock-names = "xvclk";
+    //             pwdn-gpios = <&gpio1 RK_PC2 GPIO_ACTIVE_HIGH>;
+    //             power-domains = <&power RK3576_PD_VI>;
+    //             rockchip,camera-module-index = <1>;
+	// 	rockchip,camera-module-facing = "back";
+	// 	rockchip,camera-module-name = "RK-CMK-8M-2-v1";
+    //             rockchip,camera-module-lens-name = "CK8401";
+    //             lens-focus = <&vm149c_2>;
+
+    //             port {
+    //                     camera2_out: endpoint {
+    //                             remote-endpoint = <&mipi_dphy3_in_tl13850>;
+    //                             data-lanes = <1 2 3 4>;
+	// 		};
+    //             };
+    //     };
+		imx219_2: imx219@10 {
+                compatible = "sony,imx219";
+                reg = <0x10>;
+                status = "okay";
+                pwdn-gpios = <&gpio1 RK_PC2 GPIO_ACTIVE_HIGH>;
+				power-domains = <&power RK3576_PD_VI>;
+				clocks = <&imx219_clk>;
+                rockchip,camera-module-index = <1>;
+                rockchip,camera-module-facing = "back";
+                rockchip,camera-module-name = "CMK-OT1980-PX1";
+                rockchip,camera-module-lens-name = "SHG102";
+
+                port {
+                        camera2_out: endpoint {
+                                link-frequencies = /bits/ 64 <456000000>;
+                                remote-endpoint = <&mipi_dphy3_in_imx219>;
+                                data-lanes = <1 2>;
+                        };
+                };
+        };
 };
 
 &csi2_dphy3 {
@@ -424,11 +339,12 @@
                         reg = <0>;
 						#address-cells = <1>;
                         #size-cells = <0>;
-						mipi_dphy3_in_tl13850: endpoint@1 {
-						// mipi_dphy3_in_imx219: endpoint@1 {
+						// mipi_dphy3_in_tl13850: endpoint@1 {
+						mipi_dphy3_in_imx219: endpoint@1 {
 						reg = <1>;
 						remote-endpoint = <&camera2_out>;
-						data-lanes = <1 2 3 4>;
+						// data-lanes = <1 2 3 4>;
+						data-lanes = <1 2>;
                         };
                 };
                 port@1 {
@@ -439,37 +355,6 @@
                         csidphy3_out: endpoint@0 {
                                 reg = <0>;
                                 remote-endpoint = <&mipi4_csi2_input>;
-                        };
-                };
-        };
-};
-
-&mipi2_csi2 {
-        status = "okay";
-
-        ports {
-                #address-cells = <1>;
-                #size-cells = <0>;
-
-                port@0 {
-                        reg = <0>;
-                        #address-cells = <1>;
-                        #size-cells = <0>;
-
-                        mipi2_csi2_input: endpoint@1 {
-                                reg = <1>;
-                                remote-endpoint = <&csidphy0_out>;
-                        };
-                };
-
-                port@1 {
-                        reg = <1>;
-                        #address-cells = <1>;
-                        #size-cells = <0>;
-
-                        mipi2_csi2_output: endpoint@0 {
-                                reg = <0>;
-                                remote-endpoint = <&cif_mipi_in1>;
                         };
                 };
         };
@@ -506,32 +391,12 @@
         };
 };
 
-&rkcif_mipi_lvds1 {
-        status = "okay";
-
-        port {
-                cif_mipi_in1: endpoint {
-                        remote-endpoint = <&mipi2_csi2_output>;
-                };
-        };
-};
-
 &rkcif_mipi_lvds3 {
         status = "okay";
 
         port {
                 cif_mipi_in3: endpoint {
                         remote-endpoint = <&mipi4_csi2_output>;
-                };
-        };
-};
-
-&rkcif_mipi_lvds1_sditf {
-	status = "okay";
-
-	port {
-                mipi_lvds1_sditf: endpoint {
-                        remote-endpoint = <&isp_vir2_in0>;
                 };
         };
 };
@@ -556,6 +421,142 @@
                 isp_vir1_in0: endpoint@0 {
                         reg = <0>;
                         remote-endpoint = <&mipi_lvds3_sditf>;
+                };
+        };
+};
+
+&i2c6 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c6m0_xfer>;
+
+	vm149c_1: vm149c@c {
+                compatible = "silicon touch,vm149c";
+                status = "okay";
+                reg = <0x0c>;
+                rockchip,camera-module-index = <0>;
+                rockchip,camera-module-facing = "back";
+        };
+
+        ov13850_1: ov13850@36 {
+                compatible = "ovti,ov13850";
+                status = "okay";
+                reg = <0x36>;
+                clocks = <&cru CLK_MIPI_CAMERAOUT_M1>;
+                clock-names = "xvclk";
+		pwdn-gpios = <&gpio1 RK_PB3 GPIO_ACTIVE_HIGH>;
+                power-domains = <&power RK3576_PD_VI>;
+                rockchip,camera-module-index = <0>;
+                rockchip,camera-module-facing = "back";
+                rockchip,camera-module-name = "RK-CMK-8M-2-v1";
+                rockchip,camera-module-lens-name = "CK8401";
+                lens-focus = <&vm149c_1>;
+
+                port {
+                        camera1_out: endpoint {
+				remote-endpoint = <&mipi_dphy0_in_tl13850>;
+				data-lanes = <1 2 3 4>;
+			};
+                };
+        };
+
+	// imx219_2: imx219@10 {
+	// 	compatible = "sony,imx219";
+	// 	reg = <0x10>;
+	// 	status = "okay";
+	// 	pwdn-gpios = <&gpio1 RK_PB3 GPIO_ACTIVE_HIGH>;
+	// 	power-domains = <&power RK3576_PD_VI>;
+	// 	clocks = <&imx219_clk>;
+	// 	rockchip,camera-module-index = <0>;
+	// 	rockchip,camera-module-facing = "back";
+	// 	rockchip,camera-module-name = "CMK-OT1980-PX1";
+	// 	rockchip,camera-module-lens-name = "SHG102";
+	// 	port {
+	// 		camera1_out: endpoint {
+	// 			link-frequencies = /bits/ 64 <456000000>;
+	// 			remote-endpoint = <&mipi_dphy0_in_imx219>;
+	// 			data-lanes = <1 2>;
+	// 		};
+	// 	};
+	// };
+};
+
+&csi2_dphy0 {
+	status = "okay";
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		port@0 {
+			reg = <0>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			mipi_dphy0_in_tl13850: endpoint@1 {
+			// mipi_dphy0_in_imx219: endpoint@1 {
+			reg = <1>;
+			remote-endpoint = <&camera1_out>;
+			data-lanes = <1 2 3 4>;
+			// data-lanes = <1 2>;
+			};
+		};
+		port@1 {
+			reg = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			csidphy0_out: endpoint@0 {
+			reg = <0>;
+			remote-endpoint = <&mipi2_csi2_input>;
+			};
+		};
+	};
+};
+
+&mipi2_csi2 {
+        status = "okay";
+
+        ports {
+                #address-cells = <1>;
+                #size-cells = <0>;
+
+                port@0 {
+                        reg = <0>;
+                        #address-cells = <1>;
+                        #size-cells = <0>;
+
+                        mipi2_csi2_input: endpoint@1 {
+                                reg = <1>;
+                                remote-endpoint = <&csidphy0_out>;
+                        };
+                };
+
+                port@1 {
+                        reg = <1>;
+                        #address-cells = <1>;
+                        #size-cells = <0>;
+
+                        mipi2_csi2_output: endpoint@0 {
+                                reg = <0>;
+                                remote-endpoint = <&cif_mipi_in1>;
+                        };
+                };
+        };
+};
+
+&rkcif_mipi_lvds1 {
+        status = "okay";
+
+        port {
+                cif_mipi_in1: endpoint {
+                        remote-endpoint = <&mipi2_csi2_output>;
+                };
+        };
+};
+
+&rkcif_mipi_lvds1_sditf {
+	status = "okay";
+
+	port {
+                mipi_lvds1_sditf: endpoint {
+                        remote-endpoint = <&isp_vir2_in0>;
                 };
         };
 };
