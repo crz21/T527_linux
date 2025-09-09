@@ -37,6 +37,7 @@
                 clocks = <&imx219_clk>;  // 引用上面定义的时钟（label有效）
                 clock-names = "xclk";
                 pwdn-gpios = <&gpio1 18 0>;  // 确认GPIO引脚与硬件匹配
+                power-domains = <&power 15>;
                 rockchip,camera-module-index = <1>;
                 rockchip,camera-module-facing = "back";
                 rockchip,camera-module-name = "CMK-OT1980-PX1";
@@ -45,7 +46,7 @@
                 port {
                     camera2_out: endpoint {
                         link-frequencies = /bits/ 64 <456000000>;
-                        // remote-endpoint = <&mipi_dphy3_in_tl13850>;  // 引用DPHY的输入端点
+                        remote-endpoint = <&mipi_dphy3_in_tl13850>;  // 引用DPHY的输入端点
                         data-lanes = <1 2>;  // 2条MIPI数据通道
                     };
                 };
@@ -53,100 +54,112 @@
         };
     };
 
-    // // 3. 修改基础设备树中的csi2_dphy3节点（启用+配置端口）
+    // 3. 修改基础设备树中的csi2_dphy3节点（启用+配置端口）
     fragment@2 {
         target = <&csi2_dphy3>;  // 指向基础设备树中的MIPI DPHY3节点
         __overlay__ {
-    //         status = "okay";  // 启用DPHY3
-    //         ports {
-    //             #address-cells = <1>;
-    //             #size-cells = <0>;
+            status = "okay";  // 启用DPHY3
+            pports {
+                #address-cells = <1>;
+                #size-cells = <0>;
+                port@0 {
+                        reg = <0>;
+						#address-cells = <1>;
+                        #size-cells = <0>;
+						mipi_dphy3_in_tl13850: endpoint@1 {
+						reg = <1>;
+						remote-endpoint = <&camera2_out>;
+						data-lanes = <1 2>;
+                        };
+                };
+                port@1 {
+                        reg = <1>;
+                        #address-cells = <1>;
+                        #size-cells = <0>;
 
-    //             port@0 {  // 输入端口（连接摄像头）
-    //                 reg = <0>;
-    //                 // 移除冗余的#address-cells和#size-cells
-                    // mipi_dphy3_in_tl13850: endpoint {  // 单个endpoint无需reg
-                    //     remote-endpoint = <&camera2_out>;  // 关联摄像头的输出端点
-                    //     data-lanes = <1 2>;
-                    // };
-    //             };
-
-    //             port@1 {  // 输出端口（连接MIPI CSI2控制器）
-    //                 reg = <1>;
-    //                 csidphy3_out: endpoint {  // 单个endpoint无需reg
-    //                     remote-endpoint = <&mipi4_csi2_input>;  // 关联CSI2的输入端点
-    //                 };
-    //             };
-    //         };
+                        csidphy3_out: endpoint@0 {
+                                reg = <0>;
+                                remote-endpoint = <&mipi4_csi2_input>;
+                        };
+                };
+            };
         };
     };
 
-    // // 4. 修改基础设备树中的mipi4_csi2节点（启用+配置端口）
-    // fragment@3 {
-    //     target = <&mipi4_csi2>;  // 指向基础设备树中的MIPI CSI2控制器节点
-    //     __overlay__ {
-    //         status = "okay";  // 启用CSI2控制器
-    //         ports {
-    //             #address-cells = <1>;
-    //             #size-cells = <0>;
+    // 4. 修改基础设备树中的mipi4_csi2节点（启用+配置端口）
+    fragment@3 {
+        target = <&mipi4_csi2>;  // 指向基础设备树中的MIPI CSI2控制器节点
+        __overlay__ {
+            status = "okay";  // 启用CSI2控制器
+            ports {
+                #address-cells = <1>;
+                #size-cells = <0>;
 
-    //             port@0 {  // 输入端口（连接DPHY）
-    //                 reg = <0>;
-    //                 mipi4_csi2_input: endpoint {
-    //                     remote-endpoint = <&csidphy3_out>;  // 关联DPHY的输出端点
-    //                 };
-    //             };
+                 port@0 {
+                        reg = <0>;
+                        #address-cells = <1>;
+                        #size-cells = <0>;
 
-    //             port@1 {  // 输出端口（连接CIF）
-    //                 reg = <1>;
-    //                 mipi4_csi2_output: endpoint {
-    //                     remote-endpoint = <&cif_mipi_in3>;  // 关联CIF的输入端点
-    //                 };
-    //             };
-    //         };
-    //     };
-    // };
+                        mipi4_csi2_input: endpoint@1 {
+                                reg = <1>;
+                                remote-endpoint = <&csidphy3_out>;
+                        };
+                };
 
-    // // 5. 修改基础设备树中的rkcif_mipi_lvds3节点（启用+配置端口）
-    // fragment@4 {
-    //     target = <&rkcif_mipi_lvds3>;  // 指向基础设备树中的CIF节点
-    //     __overlay__ {
-    //         status = "okay";  // 启用CIF
-    //         port {
-    //             cif_mipi_in3: endpoint {
-    //                 remote-endpoint = <&mipi4_csi2_output>;  // 关联CSI2的输出端点
-    //             };
-    //         };
-    //     };
-    // };
+                port@1 {
+                        reg = <1>;
+                        #address-cells = <1>;
+                        #size-cells = <0>;
 
-    // // 6. 修改基础设备树中的rkcif_mipi_lvds3_sditf节点（启用+配置端口）
-    // fragment@5 {
-    //     target = <&rkcif_mipi_lvds3_sditf>;  // 指向基础设备树中的CIF SDITF节点
-    //     __overlay__ {
-    //         status = "okay";  // 启用SDITF
-    //         port {
-    //             mipi_lvds3_sditf: endpoint {
-    //                 remote-endpoint = <&isp_vir1_in0>;  // 关联ISP的输入端点
-    //             };
-    //         };
-    //     };
-    // };
+                        mipi4_csi2_output: endpoint@0 {
+                                reg = <0>;
+                                remote-endpoint = <&cif_mipi_in3>;
+                        };
+                };
+            };
+        };
+    };
 
-    // // 7. 修改基础设备树中的rkisp_vir1节点（启用+配置端口）
-    // fragment@6 {
-    //     target = <&rkisp_vir1>;  // 指向基础设备树中的ISP虚拟节点
-    //     __overlay__ {
-    //         status = "okay";  // 启用ISP VIR1
-    //         port {
-    //             // #address-cells = <1>;
-    //             // #size-cells = <0>;
+    // 5. 修改基础设备树中的rkcif_mipi_lvds3节点（启用+配置端口）
+    fragment@4 {
+        target = <&rkcif_mipi_lvds3>;  // 指向基础设备树中的CIF节点
+        __overlay__ {
+            status = "okay";  // 启用CIF
+            port {
+                cif_mipi_in3: endpoint {
+                    remote-endpoint = <&mipi4_csi2_output>;  // 关联CSI2的输出端点
+                };
+            };
+        };
+    };
 
-    //             isp_vir1_in0: endpoint {
-    //                 // reg = <0>;
-    //                 remote-endpoint = <&mipi_lvds3_sditf>;  // 关联CIF SDITF的输出端点
-    //             };
-    //         };
-    //     };
-    // };
+    // 6. 修改基础设备树中的rkcif_mipi_lvds3_sditf节点（启用+配置端口）
+    fragment@5 {
+        target = <&rkcif_mipi_lvds3_sditf>;  // 指向基础设备树中的CIF SDITF节点
+        __overlay__ {
+            status = "okay";  // 启用SDITF
+            port {
+                mipi_lvds3_sditf: endpoint {
+                    remote-endpoint = <&isp_vir1_in0>;  // 关联ISP的输入端点
+                };
+            };
+        };
+    };
+
+    // 7. 修改基础设备树中的rkisp_vir1节点（启用+配置端口）
+    fragment@6 {
+        target = <&rkisp_vir1>;  // 指向基础设备树中的ISP虚拟节点
+        __overlay__ {
+            status = "okay";  // 启用ISP VIR1
+            port {
+                #address-cells = <1>;
+                #size-cells = <0>;
+
+                isp_vir1_in0: endpoint@0 {
+                        reg = <0>;
+                        remote-endpoint = <&mipi_lvds3_sditf>;
+                };
+            };
+        };
+    };
 };
