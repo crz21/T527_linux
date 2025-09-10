@@ -23,7 +23,8 @@
     fragment@1 {
         // 关键：target指向基础设备树中的i2c1节点（需确认基础设备树中该节点存在）
         // 若基础设备树中i2c1的路径是/i2c@2ac40000，需改为target-path = "/i2c@2ac40000"
-        target = <&i2c1>;
+        // target = <&i2c1>;
+        target-path = "/i2c@2ac40000";
         __overlay__ {
             status = "okay";  // 启用I2C1控制器
             #address-cells = <1>;
@@ -44,10 +45,13 @@
                 rockchip,camera-module-lens-name = "SHG102";
 
                 port {
-                    camera2_out: endpoint {
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    camera2_out: endpoint@0 {
+                        reg = <0>;
                         link-frequencies = /bits/ 64 <456000000>;
                         remote-endpoint = <&mipi_dphy3_in_tl13850>;  // 引用DPHY的输入端点
-                        data-lanes = <1 2>;  // 2条MIPI数据通道
+                        data-lanes = <1 2 3 4>;  // 2条MIPI数据通道
                     };
                 };
             };
@@ -59,28 +63,27 @@
         target = <&csi2_dphy3>;  // 指向基础设备树中的MIPI DPHY3节点
         __overlay__ {
             status = "okay";  // 启用DPHY3
-            pports {
+            ports {
                 #address-cells = <1>;
                 #size-cells = <0>;
                 port@0 {
-                        reg = <0>;
-						#address-cells = <1>;
-                        #size-cells = <0>;
-						mipi_dphy3_in_tl13850: endpoint@1 {
-						reg = <1>;
-						remote-endpoint = <&camera2_out>;
-						data-lanes = <1 2>;
-                        };
+                    reg = <0>;
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    mipi_dphy3_in_tl13850: endpoint@0 {
+                    reg = <0>;
+                    remote-endpoint = <&camera2_out>;
+                    data-lanes = <1 2 3 4>;
+                    };
                 };
                 port@1 {
-                        reg = <1>;
-                        #address-cells = <1>;
-                        #size-cells = <0>;
-
-                        csidphy3_out: endpoint@0 {
-                                reg = <0>;
-                                remote-endpoint = <&mipi4_csi2_input>;
-                        };
+                    reg = <1>;
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    csidphy3_out: endpoint@0 {
+                            reg = <0>;
+                            remote-endpoint = <&mipi4_csi2_input>;
+                    };
                 };
             };
         };
@@ -94,27 +97,23 @@
             ports {
                 #address-cells = <1>;
                 #size-cells = <0>;
-
                  port@0 {
-                        reg = <0>;
-                        #address-cells = <1>;
-                        #size-cells = <0>;
-
-                        mipi4_csi2_input: endpoint@1 {
-                                reg = <1>;
-                                remote-endpoint = <&csidphy3_out>;
-                        };
+                    reg = <0>;
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    mipi4_csi2_input: endpoint@0 {
+                            reg = <0>;
+                            remote-endpoint = <&csidphy3_out>;
+                    };
                 };
-
                 port@1 {
-                        reg = <1>;
-                        #address-cells = <1>;
-                        #size-cells = <0>;
-
-                        mipi4_csi2_output: endpoint@0 {
-                                reg = <0>;
-                                remote-endpoint = <&cif_mipi_in3>;
-                        };
+                    reg = <1>;
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    mipi4_csi2_output: endpoint@0 {
+                            reg = <0>;
+                            remote-endpoint = <&cif_mipi_in3>;
+                    };
                 };
             };
         };
@@ -125,9 +124,17 @@
         target = <&rkcif_mipi_lvds3>;  // 指向基础设备树中的CIF节点
         __overlay__ {
             status = "okay";  // 启用CIF
-            port {
-                cif_mipi_in3: endpoint {
+            ports {
+                #address-cells = <1>;
+                #size-cells = <0>;
+                port@0{
+                    reg = <0>;
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+                    cif_mipi_in3: endpoint@0 {
+                     reg = <0>;
                     remote-endpoint = <&mipi4_csi2_output>;  // 关联CSI2的输出端点
+                    };
                 };
             };
         };
@@ -139,6 +146,8 @@
         __overlay__ {
             status = "okay";  // 启用SDITF
             port {
+                #address-cells = <1>;
+                #size-cells = <0>;
                 mipi_lvds3_sditf: endpoint {
                     remote-endpoint = <&isp_vir1_in0>;  // 关联ISP的输入端点
                 };
@@ -154,7 +163,6 @@
             port {
                 #address-cells = <1>;
                 #size-cells = <0>;
-
                 isp_vir1_in0: endpoint@0 {
                         reg = <0>;
                         remote-endpoint = <&mipi_lvds3_sditf>;
