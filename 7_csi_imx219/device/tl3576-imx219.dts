@@ -47,10 +47,10 @@
                 port {
                     #address-cells = <1>;
                     #size-cells = <0>;
-                    camera2_out: endpoint@0 {
+                    camera_imx219_out: endpoint@0 {
                         reg = <0>;
                         link-frequencies = /bits/ 64 <456000000>;
-                        remote-endpoint = <&mipi_dphy3_in_tl13850>;  // 引用DPHY的输入端点
+                        remote-endpoint = <&mipi_dphy3_in_imx219>;  // 引用DPHY的输入端点
                         data-lanes = <1 2 3 4>;  // 2条MIPI数据通道
                     };
                 };
@@ -70,9 +70,9 @@
                     reg = <0>;
                     #address-cells = <1>;
                     #size-cells = <0>;
-                    mipi_dphy3_in_tl13850: endpoint@0 {
+                    mipi_dphy3_in_imx219: endpoint@0 {
                     reg = <0>;
-                    remote-endpoint = <&camera2_out>;
+                    remote-endpoint = <&camera_imx219_out>;
                     data-lanes = <1 2 3 4>;
                     };
                 };
